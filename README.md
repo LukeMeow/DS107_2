@@ -2,11 +2,9 @@
 
 Hello, my name is BoRu Yang.
 
-<<<<<<< HEAD
 ## HW 1 資料視覺化
+資料視覺化
 
-=======
->>>>>>> 894afc0b7b2a1f5b1a005c98a352ff29f9d65656
 ## HW 0
 ### 針對助教給的程式範例，畫出流程圖。
 
