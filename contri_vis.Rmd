@@ -1,0 +1,291 @@
+---
+title: "Political Contribution Data Visualization"
+author: "楊博儒"
+output: html_document
+---
+
+本次資料視覺化的資料來源為「數讀政治獻金2.0」，https://www.readr.tw/project/political-contribution。<br>
+資料內容為第七到九屆的立法委員政治獻金，包含立法委員基本資料，以及政治獻金的來源等等。<br>
+本次視覺化的目標包含三項：<br>
+- 描繪出政治獻金整體的概況，並特別觀察其中捐獻來源為營利企業的 case 的佔比以及捐獻量等等。<br>
+- 探討對於營利事業來說，捐獻行為是否有明顯政黨傾向。<br>
+- 探討營利事業的捐獻和候選人是否當選之間的關聯程度。<br>
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+options(stringsAsFactors = FALSE)
+```
+
+### 讀取資料
+
+```{r}
+per16 <- read.csv("political_contribution/2016/A05_basic_all.csv", header = TRUE, sep = ",")
+don16 <- read.csv("political_contribution/2016/A02_company_all_public.csv", header = TRUE, sep = ",")
+
+per12 <- read.csv("political_contribution/2012/A15_basicall_8.csv", header = TRUE, sep = ",")
+don12 <- read.csv("political_contribution/2012/political_donation_8_od.csv", header = TRUE, sep = ",")
+
+per08 <- read.csv("political_contribution/2008/A16_basicall_7.csv", header = TRUE, sep = ",")
+don08 <- read.csv("political_contribution/2008/political_donation_7_od.csv", header = TRUE, sep = ",")
+```
+
+### 營利企業捐獻資料清理
+
+```{r}
+don08 <- select(don08, - 身份證.統一編, - 填答數 , - 其他)
+don12 <- select(don12, - 收支科目, - 身份證.統一編, - 填答數 , - 其他)
+don16 <- select(don16, - 推薦政黨, - 當選註記, - 序號, - 收支科目, - 統一編號, - 支出金額, - 金錢類, - P)
+colnames(don16)[1] <- "姓名"
+don16 <- cbind(don16, 屆數 = "9")
+
+don12 <- don12[,c(2, 1, 3, 5, 4, 6)]
+don16 <- don16[,c(6, 1, 3, 4, 2, 5)]
+```
+
+### 候選人收入資料清理
+
+```{r}
+per08 <- cbind(per08, 屆數 = "7")
+per12 <- cbind(per12, 屆數 = "8")
+per16 <- cbind(per16, 屆數 = "9")
+per16 <- per16[,c(-3, -9, -12, -15, -17, -19, -21, -23, -25, -26, -27)]
+
+per08 <- per08[,c(17, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)]
+per12 <- per12[,c(17, 2, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)]
+per16 <- per16[,c(17, 1, 2, 8, 9, 4, 3 , 5, 6, 7, 10, 11, 12, 13, 14, 15, 16)]
+```
+
+### 合併資料
+
+```{r}
+donall <- rbind(rbind(don08, don12), don16)
+perall <- rbind(rbind(per08, per12), per16)
+```
+
+# 三屆以來登記在案的政治獻金流量變化
+從圖上來看，從第七屆（2008 年）開始到第九屆（2016 年）政治獻金的總量從 20 億逐漸成長到將近 30 億，然而這些成長主要是由非營利事業捐獻的增加所造成的，實際上源自營利事業的捐獻在三屆以來並沒有太大的變動，大約都維持在將近 10 億的總額。
+
+```{r}
+perall %>%
+  select(屆數, 總收入, 營利事業捐贈收入) %>%
+  mutate(非營利事業捐贈收入 = 總收入 - 營利事業捐贈收入) %>%
+  group_by(屆數) %>%
+  summarise(營利事業捐獻流量 = sum(營利事業捐贈收入), 非營利事業捐獻流量 = sum(非營利事業捐贈收入)) %>%
+  gather(種類, 捐獻流量, 營利事業捐獻流量, 非營利事業捐獻流量) %>%
+  ggplot(aes(x = 屆數, y = 捐獻流量, fill = 種類)) +
+  geom_bar(stat = "identity") +
+  ggtitle("第七屆至第九屆登記在案政治獻金總量") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+# 三屆以來參與捐蹭營利事業的總數變化
+雖然三屆以來的營利事業捐獻總量並沒有太大的變動，但若仔細觀察有進行捐獻的營利企業的數量，會發現參與捐獻的企業家數在第七屆之後減少了將近 1500 間，變為大約 4000 間，造成這個巨大的改變的原因來自法規對於能夠進行捐獻的企業的要求更加嚴格。然而在企業捐獻家數減少的情況下，第八和第九屆的營利企業捐獻流量依然能夠跟第七屆持平，代表平均而言企業的政治捐獻的金額實際上是有提高的。
+
+```{r}
+donall %>%
+  select(屆數, 捐贈者.支出對象) %>%
+  group_by(屆數, 捐贈者.支出對象) %>%
+  count(屆數, 捐贈者.支出對象) %>%
+  ggplot(aes(x = 屆數)) +
+  geom_bar() +
+  ggtitle("第七屆至第九屆參與捐獻的營利事業家數") +
+  ylab("營利事業家數") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+# 三屆的營利事業捐獻金額分布情況
+接著細部觀察在這眾多有捐獻的企業中，捐獻金額的分布概況。可以發現在三屆的金額分布中，都是呈現出相當極端的右偏分布，大多數的營利事業的捐獻金額集中在金額較少的區塊，另外也可以發現到，相對於第七屆而言，第八和第九屆的的捐獻金額的最大值高出許多，各自都有大於兩千五百萬的捐獻個案。
+
+```{r}
+perall %>%
+  select(屆數, 營利事業捐贈收入) %>%
+  filter(營利事業捐贈收入 > 0) %>%
+  ggplot(aes(x = 營利事業捐贈收入, fill = 屆數)) +
+  geom_histogram(position = "dodge") +
+  ggtitle("第七屆至第九屆營利事業捐獻金額分布") +
+  ylab("營利事業家數") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+# 探討對於營利事業來說，捐獻行為是否有明顯政黨傾向
+我們想要知道營利企業在捐獻的時候，假設他對兩位以上的候選人進行捐獻，會有分散風險的概念，國民黨和民進黨各押一部分，或者是全押在特定政黨之上。<br>
+在視覺化的部分，將國民黨的值設定為 0，民進黨的值設定為 1，若一個企業的捐獻傾向為 0，代表他的捐獻對象全押在國民黨，若為 1 則是民進黨，為 0.5 則為兩黨各半。<br>
+然而企業捐獻傾向的值極易受到捐獻人數的基數的影響而有很大的差異，例如只對兩位候選人捐獻的企業的捐獻傾向值，只會集中在 0, 0,5 和 1 三個點，但對大於五位候選人捐獻的企業的捐獻傾向值則會呈現相對連續的分布，故在分析上將營利企業分為三個種類，捐獻人數為 2 的為低捐獻人數企業，捐獻人數為三到五的為中捐獻人數企業，捐獻人數大於六的為高捐獻人數企業。<br>
+另外，我預設企業的捐獻行為會受到每次選舉的政治環境影響，不能一概而論，因此會針對不同的屆數來進行分析。
+
+```{r}
+donbe <- donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 姓名, 捐贈者.支出對象, 推薦政黨) %>%
+  filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
+  group_by(屆數, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  filter(n>1) %>%
+  mutate(捐獻人數 = ifelse(n >= 1 & n <= 2, "低捐獻人數",
+                       ifelse(n >= 3 & n <= 5, "中捐獻人數", "高捐獻人數"))) %>%
+  rename(總捐獻人數 = n)
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
+  group_by(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  filter(捐贈者.支出對象 %in% donbe$捐贈者.支出對象) %>%
+  left_join(donbe, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "低捐獻人數") %>%
+  mutate(value = ifelse(推薦政黨 == "民主進步黨", n, 0)) %>%
+  group_by(屆數, 捐贈者.支出對象, 總捐獻人數) %>%
+  summarise(捐獻分數 = sum(value)) %>%
+  mutate(政黨捐獻傾向 = 捐獻分數/總捐獻人數) %>%
+  ggplot(aes(x = 政黨捐獻傾向, colour = 屆數)) +
+  geom_density() +
+  ggtitle("低捐獻人數營利事業政黨捐獻傾向分布") +
+  theme(text = element_text(family = "Heiti TC Light"))
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
+  group_by(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  filter(捐贈者.支出對象 %in% donbe$捐贈者.支出對象) %>%
+  left_join(donbe, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "中捐獻人數") %>%
+  mutate(value = ifelse(推薦政黨 == "民主進步黨", n, 0)) %>%
+  group_by(屆數, 捐贈者.支出對象, 總捐獻人數) %>%
+  summarise(捐獻分數 = sum(value)) %>%
+  mutate(政黨捐獻傾向 = 捐獻分數/總捐獻人數) %>%
+  ggplot(aes(x = 政黨捐獻傾向, colour = 屆數)) +
+  geom_density() +
+  ggtitle("中捐獻人數營利事業政黨捐獻傾向分布") +
+  theme(text = element_text(family = "Heiti TC Light"))
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
+  group_by(屆數, 捐贈者.支出對象, 推薦政黨) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  filter(捐贈者.支出對象 %in% donbe$捐贈者.支出對象) %>%
+  left_join(donbe, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "高捐獻人數") %>%
+  mutate(value = ifelse(推薦政黨 == "民主進步黨", n, 0)) %>%
+  group_by(屆數, 捐贈者.支出對象, 總捐獻人數) %>%
+  summarise(捐獻分數 = sum(value)) %>%
+  mutate(政黨捐獻傾向 = 捐獻分數/總捐獻人數) %>%
+  ggplot(aes(x = 政黨捐獻傾向, colour = 屆數)) +
+  geom_density() +
+  ggtitle("高捐獻人數營利事業政黨捐獻傾向分布") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+針對營利事業的捐獻政黨傾向，總結而言，不同屆數有不一樣的分布情況，且大致能狗反應當次的政治環境。<br>
+對於低捐獻人數的營利企業而言，在第七屆的時候大多數呈現分散風險的樣態，也就是兩黨各押一邊，到了第八屆全押國民黨的低捐獻人數企業的比例相對提高，幾乎和各押一邊的比例差不多，反之全壓在民進黨的比例減少。到了第九屆全押民進黨的低捐獻人數企業的比例大幅提高，全押國民黨的比例則大幅減少。<br>
+對於中捐獻人數的營利企業而言，第七屆的時候大多數企業選擇分散捐獻但押國民黨多一點點，到了第八屆全押國民黨的企業比例提高，並且政黨捐獻傾向大於 0.5（押民進黨多一點點或全押民進黨）的企業比例減少。第九屆全押國民黨的企業比例大幅減少，傾向押民進黨或全押民進黨的比例增加。<br>
+對於高捐獻人數的企業來說，在第七和第八屆的政黨捐顯傾向相當類似，大部分都集中在全押國民黨到各押一半的範圍中，而幾乎沒有企業全押民進黨。然而到了第九屆，整體的政黨捐獻傾向分布在大於 0.5 的範圍中被大幅拉高，反之傾向國民黨的捐獻比例則降低。<br>
+以上三張政黨捐獻傾向分佈圖，大抵忠實反映出每次大選的政治環境，在 2008 年和 2012 年的選舉中，確實都是國民黨的佔有較強勢的地位，然而到了 2016 年則由民進黨主宰戰局，並再一次政黨輪替。
+
+# 探討營利事業的捐獻和候選人是否當選之間的關聯程度
+我們也想要知道營利事業的捐獻和候選人是否當選之間的關係，我們預測不論是在低、中或是高捐獻人數的營利事業，其捐獻對象的當選分布都會集中在大於 0.5 的範圍之中，先不考慮是營利事業會想要捐獻給勝選可能較高的企業，或是獲得較多捐獻的候選人因為有較多的資源而勝選，我們想要先印證這兩者之間是否存在某些關係。
+
+```{r}
+donra <- donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  group_by(屆數, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  mutate(捐獻人數 = ifelse(nn >= 1 & nn <= 2, "低捐獻人數",
+                       ifelse(nn >= 3 & nn <= 5, "中捐獻人數", "高捐獻人數"))) %>%
+  rename(總捐獻人數 = nn)
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 當選註記) %>%
+  filter(!is.na(當選註記)) %>%
+  group_by(捐贈者.支出對象, 當選註記) %>%
+  count(屆數, 捐贈者.支出對象) %>%
+  mutate(value = ifelse(當選註記 == "*", n, 0)) %>%
+  ungroup() %>%
+  left_join(donra, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "低捐獻人數") %>%
+  group_by(捐贈者.支出對象) %>%
+  mutate(捐獻當選機率 = sum(value) / sum(n)) %>%
+  distinct(屆數, 捐贈者.支出對象, .keep_all = TRUE) %>%
+  ggplot(aes(x = 捐獻當選機率, colour = 屆數)) +
+  geom_density() +
+  ggtitle("低捐獻人數營利事業政黨捐獻當選分布") +
+  theme(text = element_text(family = "Heiti TC Light"))
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 當選註記) %>%
+  filter(!is.na(當選註記)) %>%
+  group_by(捐贈者.支出對象, 當選註記) %>%
+  count(屆數, 捐贈者.支出對象) %>%
+  mutate(value = ifelse(當選註記 == "*", n, 0)) %>%
+  ungroup() %>%
+  left_join(donra, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "中捐獻人數") %>%
+  group_by(捐贈者.支出對象) %>%
+  mutate(捐獻當選機率 = sum(value) / sum(n)) %>%
+  distinct(屆數, 捐贈者.支出對象, .keep_all = TRUE) %>%
+  ggplot(aes(x = 捐獻當選機率, colour = 屆數)) +
+  geom_density() +
+  ggtitle("中捐獻人數營利事業政黨捐獻當選分布") +
+  theme(text = element_text(family = "Heiti TC Light"))
+
+donall %>%
+  select(屆數, 姓名, 捐贈者.支出對象) %>%
+  group_by(屆數, 姓名, 捐贈者.支出對象) %>%
+  count(捐贈者.支出對象) %>%
+  ungroup() %>%
+  left_join(perall, by = c("姓名" = "姓名", "屆數" = "屆數")) %>%
+  select(屆數, 捐贈者.支出對象, 當選註記) %>%
+  filter(!is.na(當選註記)) %>%
+  group_by(捐贈者.支出對象, 當選註記) %>%
+  count(屆數, 捐贈者.支出對象) %>%
+  mutate(value = ifelse(當選註記 == "*", n, 0)) %>%
+  ungroup() %>%
+  left_join(donra, by = c("捐贈者.支出對象", "屆數" = "屆數")) %>%
+  filter(捐獻人數 == "高捐獻人數") %>%
+  group_by(捐贈者.支出對象) %>%
+  mutate(捐獻當選機率 = sum(value) / sum(n)) %>%
+  distinct(屆數, 捐贈者.支出對象, .keep_all = TRUE) %>%
+  ggplot(aes(x = 捐獻當選機率, colour = 屆數)) +
+  ggtitle("高捐獻人數營利事業政黨捐獻當選分布") +
+  geom_density() +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+從結果的三張圖來看，總結來說，營利企業們捐獻的對象確實較為集中在有當選的候選人上，然而特別值得一提的部分是，第九屆相對於其他兩屆來說，捐獻集中在當選的候選人身上的情況更加明顯。
