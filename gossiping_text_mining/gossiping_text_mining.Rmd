@@ -1,0 +1,295 @@
+---
+title: "Gossiping Text Mining"
+author: "楊博儒"
+output: html_document
+---
+
+# 八卦版文字探勘
+
+本次文字探勘所使用的資料為 PTT 八卦版在 2019 年二月和三月的所有貼文和推文的資料。
+
+PTT 八卦版上有許多關於不同議題的討論，在一定程度上能夠代表 25 到 40 歲年齡層的意見。而在這個平台之上，透過將不同的議題適當地分類，可以反映出不同時刻下的熱門話題，甚至能夠找出對於八卦版使用者而言，哪些議題得到大多數人的共同關注，又有哪些議題只受到部分使用者的討論。
+
+因此在這次的文字探勘中，我試圖回答三個問題：
+
+- 在八卦版的文章當中，可以分出哪些明顯的類別？
+- 這些不同類別的文章在這兩個月的時間內，討論的熱度是否有變化？
+- 這些不同賴別的文章，哪些受到更多元的使用者的關注？
+
+```{r}
+options(stringsAsFactors = FALSE)
+library(tidyverse)
+library(jiebaR)
+library(LDAvis)
+library(servr)
+library(tidytext)
+library(igraph)
+library(topicmodels)
+```
+
+### 讀取八卦版資料
+```{r}
+load("Ptt_gos_feb_post.rda")
+load("Ptt_gos_mar_post.rda")
+post.df <- bind_rows(Ptt_gos_feb_post, Ptt_gos_mar_post)
+```
+
+### 引用斷詞和字典
+```{r}
+segment_not <- c("蔡英文", "蔡總統",  "韓國瑜", "柯文哲", "柯市長", "柯p", "韓市長", "九二共識", "空污", "高雄", "韓粉", "喜韓兒", "藍蛆", "綠吱", "時代力量", "舔共", "假新聞", "笑死", "歐陽娜娜", "爆料公社", "核電", "劈腿", "非洲豬瘟", "比特犬", "屏東燈會")
+stopWords <- readRDS("stopWords.rds")
+stopWords <- rbind(stopWords, data.frame(word = c("1.", "2.", "from", "my", "Sent", "JPTT", "完整", "連結", "網址", "內文", "備註", "來源", "3.", "4.", "5.", "新聞標題", "約", "達", "占", "G", "the", "a", "to", "in", "I", "and", "of", "s", "is", "you", "IPhone", "Asus", "ASUS", "Samsung", "SM", "Sony", "HTC", "u", "Xiaomi")))
+
+jieba<-jiebaR::worker()
+new_user_word(jieba, segment_not)
+```
+
+## 在八卦版的文章當中，可以分出哪些明顯的類別？
+
+我使用 LDA 主題模型，根據貼文的內文來找出潛在不同的主題，預設有 25 個不同主題。
+
+### 資料前處理
+```{r}
+post.df <- post.df %>%
+  mutate(doc_id = row_number())
+
+post.df$doc_id <- as.character(post.df$doc_id)
+
+post.df_1 <- post.df %>%
+  select(post, doc_id) %>%
+  mutate(word = purrr::map(post, function(x) segment(x, jieba))) %>%
+  unnest(word) %>%
+  anti_join(stopWords) %>%
+  mutate(word = gsub("[A-Za-z0-9]", "", word)) %>%
+  filter(nchar(word) > 1) %>% 
+  count(doc_id, word, sort = TRUE) %>%
+  ungroup()
+```
+
+### 創造 document_term matrix 並且套入 LDA 模型
+```{r}
+chapterDTM <- post.df_1 %>% cast_dtm(doc_id, word, n)
+
+ldaOut <- LDA(chapterDTM, 25, method="Gibbs", control=list(seed = 1234))
+```
+
+### 將 LDA 模型視覺化
+```{r}
+topicmodels2LDAvis <- function(x, ...){
+    post <- topicmodels::posterior(x)
+    if (ncol(post[["topics"]]) < 3) stop("The model must contain > 2 topics")
+    mat <- x@wordassignments
+    LDAvis::createJSON(
+        phi = post[["terms"]], 
+        theta = post[["topics"]],
+        vocab = colnames(post[["terms"]]),
+        doc.length = slam::row_sums(mat, na.rm = TRUE),
+        term.frequency = slam::col_sums(mat, na.rm = TRUE)
+    )
+}
+
+llis.json <- topicmodels2LDAvis(ldaOut)
+serVis(llis.json, out.dir = 'vis', open.browser = FALSE)
+```
+
+視覺化結果：https://boruyang.github.io/CSX-4001/gossiping_text_mining/vis/
+
+根據結果可以看出所有的文章都被分成了 25 種不同的主題，在不同的主題之下可以觀察到前 30 個最相關的詞彙。上面有 lambda 參數可供調整，當 lambda 為 1 的時候，呈現的前 30 個詞彙是完全根據其出現的次數來排序，若把 lambda 值調小，會使得 document-specific 的用詞的權重被提高，也就是會使得一些整體來說出現頻率不那麼高，但是在某一類文本中特別關鍵的詞彙也排進前 30 個相關詞彙。
+
+透過這張視覺化的圖表，便能夠對不同的主題做歸類，然而在這張視覺化的圖中，他因為有自己分派主題的方式（佔比例最大的主題為主題 1，次之的為主題 2 佔比最小的為主題 25），導致圖中的主題號碼和實際的主題分類是不一樣的，因此我們必須要列出圖中的主題對照到實際的哪個主題，而該主題又是說明什麼。
+
+- 視覺化主題號碼 = 實際主題號碼 主題名稱
+- top  1 = 16 中美相關議題
+- top  2 = 18 市場投資議題
+- top  3 = 24 總統初選
+- top  4 = 14 理性討論
+- top  5 = 13 兩岸議題
+- top  6 = 17 交通事故
+- top  7 = 8  同婚能源法案
+- top  8 = 25 過年時節活動
+- top  9 = 4  柯文哲
+- top 10 = 21 歷史宗教議題
+- top 11 = 23 各國國防議題
+- top 12 = 20 遊戲與「還願」
+- top 13 = 22 華航罷工
+- top 14 = 5  網路相關新聞
+- top 15 = 2  憤怒討論
+- top 16 = 6  刑事案件新聞
+- top 17 = 10 醫療與非洲豬瘟
+- top 18 = 9  韓國瑜
+- top 19 = 19 廢文
+- top 20 = 1  家庭和感情
+- top 21 = 3  房屋與房價
+- top 22 = 11 台大醫學系八卦
+- top 23 = 7  廢文
+- top 24 = 12 廢文
+- top 25 = 15 廢文
+
+以上所呈現的就是在 PTT 八卦版中 2019 年二月到三月最重要的主題。
+
+## 這些不同類別的文章在這兩個月的時間內，討論的熱度是否有變化？
+
+在找出了不同的主題之後，接下來就必須把這些主題分派回文件，並且把時間的變項拉進來進行分析。
+
+然而 LDA 主題模型有一個特色，由於他是利用貝氏統計的概念來進行分類，因此一份文件屬於哪一個主題並不是被很武斷地分類出來的結果，而是會計算出一份文件屬於不同主題的機率各是多少，我們要找出其中最大機率的分類，並以此分類來作為該文件的主題。
+
+在這樣的思維之下，如果一份文件的內容非常切合到特定主題，那麼他被分配到該主題的機率就會很大，分配到其他主題的機率就會很小。若存在一份文件其實都不太適合先前已經分類出來的大主題，那該文件之於不同主題的機率分配，就會相當均勻並且機率值都不會大。
+
+站在想要探討議題熱度的角度思考，會希望分析的文件能夠被明確分到特定主題，因此我在這個階段資料前處理的部分，找出每一個文件最有可能被分配到的主題，並將該主題指派回該文件，再剔除掉主題最大機率分類小於 0.2 的文件（因為這些文件通常不適合已經分類出來的主題）。
+
+### 資料前處理
+```{r}
+chapters_gamma <- tidy(ldaOut, matrix = "gamma")
+
+chapter_classifications <- chapters_gamma %>%
+  group_by(document) %>%
+  top_n(1, gamma) %>%
+  filter(gamma > 0.2) %>%
+  ungroup()
+
+chapter_classifications_all <- 
+  chapter_classifications[!duplicated(chapter_classifications$document), ]
+
+colnames(chapter_classifications_all)[1] <- "doc_id"
+
+data <- chapter_classifications_all %>%
+  select(-gamma) %>%
+  left_join(post.df, by = "doc_id")
+```
+
+### 作出熱度趨勢圖
+```{r}
+data_plot <- data %>%
+  select(topic, timestamp) %>%
+  mutate(timestamp = str_replace(timestamp, "  ", " ")) %>%
+  separate(timestamp, c("day", "month", "date", "time", "year"), sep = " ") %>%
+  mutate(date = as.numeric(date)) %>%
+  mutate(week = ifelse(month == "Feb" & date <= 7, "Feb w1",
+                ifelse(month == "Feb" & date <= 14, "Feb w2",
+                ifelse(month == "Feb" & date <= 21, "Feb w3",
+                ifelse(month == "Feb" & date <= 28, "Feb w4",
+                ifelse(month == "Mar" & date <= 7, "Mar w1",
+                ifelse(month == "Mar" & date <= 14, "Mar w2",
+                ifelse(month == "Mar" & date <= 21, "Mar w3", "Mar w4")))))))) %>%
+  group_by(topic, week) %>%
+  count(topic) %>%
+  filter(!is.na(week)) %>%
+  ungroup() %>%
+  group_by(week) %>%
+  mutate(proportion = n / sum(n)) %>%
+  mutate(topic_name = ifelse(topic == 16, "中美相關議題",
+                      ifelse(topic == 28, "市場投資議題",
+                      ifelse(topic == 24, "總統初選",
+                      ifelse(topic == 13, "兩岸議題",
+                      ifelse(topic == 17, "交通事故",
+                      ifelse(topic == 8, "同婚能源法案",
+                      ifelse(topic == 25, "過年時節活動",
+                      ifelse(topic == 4, "柯文哲",
+                      ifelse(topic == 21, "歷史宗教議題",
+                      ifelse(topic == 23, "各國國防議題",
+                      ifelse(topic == 20, "遊戲與還願",
+                      ifelse(topic == 22, "華航與罷工",
+                      ifelse(topic == 5, "網路相關新聞",
+                      ifelse(topic == 2 , "憤怒討論",
+                      ifelse(topic == 14, "理性討論",
+                      ifelse(topic == 6, "刑事案件新聞",
+                      ifelse(topic == 10, "醫療與非洲豬瘟",
+                      ifelse(topic == 9, "韓國瑜",
+                      ifelse(topic == 1, "家庭和感情",
+                      ifelse(topic == 3, "房屋與房價",
+                      ifelse(topic == 11, "台大醫學系八卦", "廢文"))))))))))))))))))))))
+
+c25 <- c("dodgerblue2","#E31A1C", # red
+                "green4",
+                "#6A3D9A", # purple
+                "#FF7F00", # orange
+                "black","gold1",
+                "skyblue2","#FB9A99", # lt pink
+                "palegreen2",
+                "#CAB2D6", # lt purple
+                "#FDBF6F", # lt orange
+                "gray70", "khaki2",
+                "maroon","orchid1","deeppink1","blue1","steelblue4",
+                "darkturquoise","green1","yellow4","yellow3",
+                "darkorange4","brown")
+
+ggplot(data_plot, aes(x = week, y = proportion, fill = topic_name)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c25, name = "decade") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+根據這張趨勢圖，可以發現以下有趣的現象：
+
+- 總統初選整體來說到了三月討論風氣更盛，在三月第三周尤其受到關注。
+- 開學前後是台大醫學系八卦討論最熱烈的時期
+- 兩岸議題也是到三月討論較多，總統初選議題熱完之後換兩岸議題熱度上升
+- 過年期間華航罷工議題突然受到高度關注
+- 韓國瑜和柯文哲熱度差不多，長期趨勢也算穩定
+- 廢文穩定佔了滿大比例...
+
+## 這些不同賴別的文章，哪些受到更多元的使用者的關注？
+
+除了探討不同主題的熱度之外，我們也會想要知道哪些主題更容易吸引到更多元的使用者來回應，也就是能夠吸引到也會在其他類型的主題回應的使用者。有些主題可能一直熱度不減，但他的回應大都是來自同一批人，並且這群人通常也只會在該類主題下方回復，有些主題雖然比較不受到熱烈討論，但他的回應者卻遍佈了各個主題，代表大家普遍都會關心這類的主題。也就是說，一個主題是否受到關注，除了要看熱度的占比外，回應者的多元性也是重要的指標
+
+### 作網絡圖
+```{r}
+two_nodes <- data %>%
+  select(topic, uid) %>%
+  mutate(topic_name = ifelse(topic == 16, "中美相關議題",
+                      ifelse(topic == 28, "市場投資議題",
+                      ifelse(topic == 24, "總統初選",
+                      ifelse(topic == 13, "兩岸議題",
+                      ifelse(topic == 17, "交通事故",
+                      ifelse(topic == 8, "同婚能源法案",
+                      ifelse(topic == 25, "過年時節活動",
+                      ifelse(topic == 4, "柯文哲",
+                      ifelse(topic == 21, "歷史宗教議題",
+                      ifelse(topic == 23, "各國國防議題",
+                      ifelse(topic == 20, "遊戲與還願",
+                      ifelse(topic == 22, "華航與罷工",
+                      ifelse(topic == 5, "網路相關新聞",
+                      ifelse(topic == 2 , "憤怒討論",
+                      ifelse(topic == 14, "理性討論",
+                      ifelse(topic == 6, "刑事案件新聞",
+                      ifelse(topic == 10, "醫療與非洲豬瘟",
+                      ifelse(topic == 9, "韓國瑜",
+                      ifelse(topic == 1, "家庭和感情",
+                      ifelse(topic == 3, "房屋與房價",
+                      ifelse(topic == 11, "台大醫學系八卦", "廢文")))))))))))))))))))))) %>%
+  select(uid, topic_name) %>%
+  group_by(uid, topic_name) %>%
+  count(uid) %>%
+  spread(topic_name, n, fill = 0)
+  
+net_data <- crossprod(as.matrix(two_nodes[-1]))
+
+graph <- graph.adjacency(net_data, mode="undirected", weighted=TRUE, diag = FALSE)
+
+set.seed(1234)
+E(graph)$width <- E(graph)$weight/3500
+a <- closeness(graph, mode="all")
+plot(graph, vertex.size=a * 200000, edge.color="orange", vertex.label.cex=a * 10000, vertex.label.family="Heiti TC Light")
+```
+
+這張圖是不同主題之間的網絡圖，不同節點的大小代表不同主題的 closeness centrality 的大小，closeness centrality 越大，代表該節點在這個網絡之中，和其他節點的距離越小。在我們所討論的框架之下，一個主題的 closeness centrality 越大，代表回應這個主題的人同樣也會在不同的主題中給出回應，反之，一個主題的 closeness centrality 越小，代表回應這個主題的人通常不會去回應其他的主題。
+
+然而這張網絡圖其實是有一點違反直覺的，因為 closeness centrality 大的主題反而被放在比較外圍，中間的主題反而是 closeness centrality 小的主題。我推測電腦在話這張網絡圖時，預設以不同主題自身的討論熱度來安排位置，而討論熱度越高的主題越處於中心，反之則在邊緣，因此可以看到像是廢文、兩岸議題等等的主題會在比較中心的位置，理性討論、家庭和感情等等則是在邊緣位置。
+
+不過透過這樣的矛盾之處，很明確的點出了一個 PTT 八卦版的一個特性：討論熱度越高的主題，通常比較少回應其他的主題。我們舉兩個極端的例子來比較會很清楚：廢文和理性討論。
+
+從下方的矩陣可以發現，只回應廢文的使用者有 56107 位，然後再看共同回應廢文和其他不同類型主題的人數，皆是低於只回應廢文者的 1/10。只回應理性討論的使用者有 7103 位，同樣回應理性討論跟兩岸議題的使用者高達 6873 位，直逼只回應理性討論使用者的數量，另外有五篇主題和理性討論的共同回應者超過了只回應理性討論使用者數量的 1/10。
+
+如此一來，便能夠清楚理解為何有些主題處於中心，closeness centrality 卻很小，反而是那些處於邊陲的主題有較高的 closeness centrality。
+
+```{r}
+net_data
+```
+
+## 小結
+
+透過 LDA 模型我們找出了在 PTT 八卦板中特別受到討論的幾個主題，並且我們試圖去找出不同主題受到關注的程度為何。
+
+而在分析受關注程度的過程中，我們拉出了熱度和多元性兩個面向來討論，熱度很直觀地說明在單位時間中不同類型的主題被呈現出來的比例，而多元性則是探討特定主題能不能夠吸引到不同的使用者來給予回應。
+
+若綜合考量這兩個指標，會發現理性討論、家庭和感情等等的主題雖然熱度較差，但是能夠吸引到曾在許多其他主題回應過的人前來回文，而像是遊戲與還願、房屋與房價等等的議題，不僅熱度不太夠，closeness centrality 也不夠高，這樣的主題才有可能被判定為是受關注較少的議題。
