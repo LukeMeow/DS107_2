@@ -2,10 +2,26 @@
 
 Hello, my name is BoRu Yang.
 
-## 文字探勘
+## HW 4-6 文字探勘
+https://boruyang.github.io/CSX-4001/gossiping_text_mining/gossiping_text_mining.html
 
+利用 LDA 模型找出潛在熱門主題，並針對不同主題分析討論熱度和回應者的多元性。
+
+## 5/9
+找出八卦版的數個重要主題，練習網絡分析的操作。
+
+## 5/2
+利用八卦版文章練習 topic modeling 的操作。
+
+## 4/25
+利用八卦版文章練習 word2vec 的操作。
+
+## 4/18
+練習 SVM 和 PCA 的操作。
 
 ## HW 1-3 資料視覺化
+https://boruyang.github.io/CSX-4001/data_visualization/contri_vis.html
+
 選定一種領域資料集，提出對資料的看法與問題定義流程說明，並將資料處理成可進行分析的狀態以供接下來的視覺化備用，再將預處理過的資料進行資料視覺化，進行 EDA，最後提出對資料更深刻的理解。
 
 本次作業選定的題目為政治獻金，作業內容存放在 data visualization 的資料夾中。
