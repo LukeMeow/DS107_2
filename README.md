@@ -2,6 +2,10 @@
 
 Hello, my name is BoRu Yang.
 
+## 5/16
+
+期末專題提案 PPT: https://docs.google.com/presentation/d/1SQFWg4thYbdf1lDu5Xrf-djV1OI4aCM5BeN8RtzGQPE/edit?usp=sharing
+
 ## HW 4-6 文字探勘
 https://boruyang.github.io/CSX-4001/gossiping_text_mining/gossiping_text_mining.html
 
