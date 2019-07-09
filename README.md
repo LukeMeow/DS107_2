@@ -28,7 +28,7 @@ https://boruyang.github.io/CSX-4001/gossiping_text_mining/gossiping_text_mining.
 練習 SVM 和 PCA 的操作。
 
 ## HW 1-3 資料視覺化
-https://boruyang.github.io/CSX-4001/data_visualization/contri_vis.html
+https://boruyang.github.io/CSX-4001/political_contribution/political_contribution.html
 
 選定一種領域資料集，提出對資料的看法與問題定義流程說明，並將資料處理成可進行分析的狀態以供接下來的視覺化備用，再將預處理過的資料進行資料視覺化，進行 EDA，最後提出對資料更深刻的理解。
 
