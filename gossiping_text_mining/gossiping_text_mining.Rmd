@@ -105,26 +105,26 @@ serVis(lda.json, out.dir = 'vis', open.browser = FALSE)
 透過這張視覺化的圖表，便能夠對不同的主題做歸類，然而在這張視覺化的圖中，它因為有自己分派主題的方式（佔比例最大的主題為主題 1，次之的為主題 2 佔比最小的為主題 25），導致圖中的主題分類號碼和實際的主題分類號碼是不一樣的，因此我們必須要列出圖中的主題對照到實際的哪個主題，而該主題又是說明什麼。
 
 - 視覺化主題號碼 = 實際主題號碼 主題名稱
-- top 1 = 16 中美相關議題
-- top 2 = 18 市場投資議題
+- top 1 = 16 中美關係
+- top 2 = 18 市場投資
 - top 3 = 24 總統初選
 - top 4 = 14 理性討論
-- top 5 = 13 兩岸議題
-- top 6 = 17 交通事故
-- top 7 = 8 同婚能源法案
-- top 8 = 25 過年時節活動
+- top 5 = 13 兩岸關係
+- top 6 = 17 交通事故新聞
+- top 7 = 8 同婚及能源法案
+- top 8 = 25 過年活動
 - top 9 = 4 柯文哲
-- top 10 = 21 歷史宗教議題
+- top 10 = 21 歷史與宗教
 - top 11 = 23 各國國防議題
 - top 12 = 20 遊戲與還願
 - top 13 = 22 華航罷工
 - top 14 = 5 網路相關新聞
-- top 15 = 2 憤怒討論
+- top 15 = 2 非理性討論
 - top 16 = 6 刑事案件新聞
 - top 17 = 10 醫療與非洲豬瘟
 - top 18 = 9 韓國瑜
 - top 19 = 19 廢文
-- top 20 = 1 家庭和感情
+- top 20 = 1 家庭與感情
 - top 21 = 3 房屋與房價
 - top 22 = 11 台大醫學系八卦
 - top 23 = 7 廢文
@@ -161,20 +161,20 @@ colnames(topic_classification)[1] <- "doc_id"
 post_with_topic <- topic_classification %>%
   select(-gamma) %>%
   left_join(allpost, by = "doc_id") %>%
-  mutate(topic_name = ifelse(topic == 16, "中美相關議題",
-                      ifelse(topic == 18, "市場投資議題",
+  mutate(topic_name = ifelse(topic == 16, "中美關係",
+                      ifelse(topic == 18, "市場投資",
                       ifelse(topic == 24, "總統初選",
-                      ifelse(topic == 13, "兩岸議題",
-                      ifelse(topic == 17, "交通事故",
-                      ifelse(topic == 8, "同婚能源法案",
-                      ifelse(topic == 25, "過年時節活動",
+                      ifelse(topic == 13, "兩岸關係",
+                      ifelse(topic == 17, "交通事故新聞",
+                      ifelse(topic == 8, "同婚及能源法案",
+                      ifelse(topic == 25, "過年活動",
                       ifelse(topic == 4, "柯文哲",
-                      ifelse(topic == 21, "歷史宗教議題",
+                      ifelse(topic == 21, "歷史與宗教",
                       ifelse(topic == 23, "各國國防議題",
                       ifelse(topic == 20, "遊戲與還願",
                       ifelse(topic == 22, "華航罷工",
                       ifelse(topic == 5, "網路相關新聞",
-                      ifelse(topic == 2 , "憤怒討論",
+                      ifelse(topic == 2 , "非理性討論",
                       ifelse(topic == 14, "理性討論",
                       ifelse(topic == 6, "刑事案件新聞",
                       ifelse(topic == 10, "醫療與非洲豬瘟",
@@ -200,10 +200,7 @@ post_with_topic_plot <- post_with_topic %>%
                 ifelse(month == "Mar" & date <= 21, "Mar w3", "Mar w4")))))))) %>%
   group_by(topic_name, week) %>%
   count(topic_name) %>%
-  filter(!is.na(week)) %>%
-  ungroup() %>%
-  group_by(week) %>%
-  mutate(proportion = n / sum(n))
+  filter(!is.na(week))
 ```
 
 ### 作出貼文熱度趨勢圖
@@ -222,11 +219,13 @@ color25 <- c("dodgerblue2","#E31A1C", # red
                 "darkturquoise","green1","yellow4","yellow3",
                 "darkorange4","brown")
 
-ggplot(post_with_topic_plot, aes(x = week, y = proportion, fill = topic_name)) +
-  geom_bar(stat = "identity") +
+ggplot(post_with_topic_plot, aes(x = week, y = n, fill = topic_name)) +
+  geom_bar(stat = "identity", position = "fill") +
   scale_fill_manual(values = color25, name = "topic") +
-  ggtitle("PTT 八卦版二月到三月討論熱度趨勢圖") +
-  theme(text = element_text(family = "PingFangTC-Medium"))
+  ggtitle("PTT 八卦版主題討論熱度趨勢") +
+  xlab("time") +
+  ylab("proportion") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
 ```
 
 根據這張趨勢圖，可以發現以下有趣的現象：
@@ -271,8 +270,8 @@ topic_net <- ifelse(topic_net > 0.5, 1, 0)
 netgraph <- graph.adjacency(topic_net, mode = "undirected", weighted = TRUE, diag = FALSE)
 closeness <- closeness(netgraph, mode = "all")
 set.seed(1234)
-par(family = ("PingFangTC-Medium"))
-plot(netgraph, vertex.size = closeness*600-5, vertex.label.cex = closeness*15, vertex.label.family = "PingFangTC-Medium", main = "PTT 八卦版二月到三月主題網路圖", sub = "節點大小代表 closeness centrality 的大小")
+par(family = ("PingFangTC-Regular"))
+plot(netgraph, vertex.size = closeness*600-5, vertex.label.cex = closeness*15+0.1, vertex.label.family = "PingFangTC-Regular", main = "PTT 八卦版主題網路")
 ```
 
 根據這張網路圖，可以發現普遍使用者最喜歡回復的文章類型為「柯文哲、韓國瑜、總統初選、兩岸議題」，這四個節點群聚在一塊，顯示出他們有很類似的特性，除了都是政治類型的文章外，四者都有相對較多的推文數，並且都有較高的接近中心性(closeness centrality)，代表這四個主題因為本身推文數多的關係，相對較容易和其他主題產生關聯（此處的關聯為不同主題收到同一使用者的推文）。
@@ -293,12 +292,13 @@ comparison <- post_with_topic_plot %>%
 
 ggplot(comparison) +
   aes(x = reorder(topic_name, sum), y = sum) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", fill = "dodgerblue2") +
   coord_flip() +
   xlab("topic") +
-  ylab("則數") +
-  ggtitle("PTT 八卦版二月到三月貼文主題則數") +
-  theme(text = element_text(family = "PingFangTC-Medium"))
+  ylab("number of posts") +
+  scale_y_continuous(limits = c(0, 4000)) +
+  ggtitle("PTT 八卦版各主題貼文則數") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
 ```
 
 透過觀察上圖可以發現，貼文熱度和推文網路結構之間存在些許的出入，貼文主題則數最高的主題「廢文」出現在網路結構的邊陲地帶，而貼文主題則數第二和第三的主題「兩岸議題、總統初選」才出現在推文網路結構的核心區塊。
@@ -326,12 +326,12 @@ uni <- gather(uni, topic, proportion, 1:22)
 ```{r}
 ggplot(uni) +
   aes(x = reorder(topic, proportion), y = proportion) +
-  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity", fill = "dodgerblue2") +
   coord_flip() +
   xlab("topic") +
   ylab("proportion") +
-  ggtitle("PTT 八卦版二月到三月各單一主題推文者比例") +
-  theme(text = element_text(family = "PingFangTC-Medium"))
+  ggtitle("PTT 八卦版各主題單一推文者比例") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
 ```
 
 根據上面這張圖，可以看到單一主題推文者比例最高的主題是華航罷工，再來是韓國瑜以及廢文，華航罷工的推文者中，有高達三成的人在這兩個月的時間中，只對一種到兩種的文章主題進行推文，這樣的人在韓國瑜以及廢文的推文者中也佔了大約兩成。雖然這三類主題相對於其他主題都有較高比例的單一主題推文者，然而我認為這種現象背後的成因是不一樣的。
@@ -357,3 +357,124 @@ ggplot(uni) +
 - 廢文：廢文在 PTT 的推文熱度相當穩定，並且擁有最高的推文則數，在推文網路結構中卻處於相當邊緣的位置，也有較高的單一主題推文者比例，顯示出這類文章在 PTT 上只是被發布得很多，實際上大部份的 PTT 使用者對這樣主題並不是很有興趣，但即便如此，廢文主題仍存在著一批它自己的擁護者，在推文的行為上只會對這類主題進行推文。
 
 以上是對幾個特別具有特色的主題分類進行簡要分析，在推文行為的部分目前是透過網路結構和單一推文者比例的指標來觀察，未來也許可以進一步去分析推文的內文並且搭配情感分析，進一步 PTT 使用者對於不同的主題所抱持的態度為何。
+
+
+```{r}
+load("apr_reply.rda")
+```
+
+
+
+```{r}
+uni_id_hua <- bipartite_matrix %>%
+  as.data.frame() %>%
+  mutate(id = rownames(bipartite_matrix)) %>%
+  mutate(sum = rowSums(.[1:22])) %>%
+  filter(sum <= 2) %>%
+  filter(華航罷工 == 1) %>%
+  select(id)
+
+uni_id_han <- bipartite_matrix %>%
+  as.data.frame() %>%
+  mutate(id = rownames(bipartite_matrix)) %>%
+  mutate(sum = rowSums(.[1:22])) %>%
+  filter(sum <= 2) %>% 
+  filter(韓國瑜 == 1) %>%
+  select(id)
+  
+uni_id_he <- bipartite_matrix %>%
+  as.data.frame() %>%
+  mutate(id = rownames(bipartite_matrix)) %>%
+  mutate(sum = rowSums(.[1:22])) %>%
+  filter(sum <= 2) %>%
+  filter(廢文 == 1) %>%
+  select(id)
+```
+
+
+
+```{r}
+res_hua <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% uni_id_hua$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(res_hua, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("華航罷工標記推文者數量") +
+  ylab("推文數") +
+  ggtitle("標記推文者 VS. 推文數") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
+
+res_han <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% uni_id_han$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(res_han, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("韓國瑜標記推文者數量") +
+  ylab("推文數") +
+  ggtitle("標記推文者 VS. 推文數") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
+
+res_he <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% uni_id_he$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(res_he, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("廢文標記推文者數量") +
+  ylab("推文數") +
+  ggtitle("標記推文者 VS. 推文數") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
+```
+
+
+
+```{r}
+set.seed(1234)
+random_user <- allreply %>%
+  distinct(id) %>%
+  sample_n(907)
+
+random <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% random_user$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(random, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("隨機抽樣推文者數量") +
+  ylab("推文數") +
+  ggtitle("隨機抽樣推文者 VS. 推文數") +
+  theme(text = element_text(family = "PingFangTC-Regular"))
+```
+
+```{r}
+summary(lm(max ~ poly(n_user, 4), res_hua))
+summary(lm(max ~ poly(n_user, 4), res_han))
+summary(lm(max ~ poly(n_user, 4), res_he))
+```
+
