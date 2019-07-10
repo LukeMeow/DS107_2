@@ -35,10 +35,10 @@ output:
 ### Loading packages and setting
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(ggplot2)
-library(lubridate)
-library(ggridges)
+library(tidyverse) # data manipulation
+library(lubridate) # time data handling
+library(ggplot2) # visualization
+library(ggridges) # ridges plot
 options(stringsAsFactors = FALSE)
 basic_theme <- function() {
   theme_minimal() +
