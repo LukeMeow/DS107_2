@@ -13,6 +13,15 @@ output:
       collapsed: false
 ---
 
+<style>
+
+body {
+    color: #555555;
+    font-size: 14px;
+}
+
+</style>
+
 ## Notes
 
 ### Goals of this document
