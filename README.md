@@ -2,7 +2,7 @@
 
 ## Topic Popularity Research
 
-PTT 八卦版文章主題分類並偵測熱門程度實作
+實作：PTT 八卦版文章主題分類並比較熱門程度
 
 https://boruyang.github.io/portfolio/topic_popularity_research/topic_popularity_research.html
 
