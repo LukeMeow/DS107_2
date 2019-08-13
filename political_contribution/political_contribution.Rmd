@@ -165,8 +165,8 @@ ggplot(donation_cat, aes(x = 屆數, y = 捐獻金額, fill = 類別)) +
 
 ```{r, fig.align="center"}
 donation_company_num <- donation %>%
-  group_by(屆數, 捐贈企業) %>%
-  count(屆數, 捐贈企業)
+  group_by(屆數, 統一編號) %>%
+  count(屆數, 統一編號)
 
 ggplot(donation_company_num, aes(x = 屆數)) +
   geom_bar(width = 0.7, fill = "steelblue") +
@@ -177,7 +177,7 @@ ggplot(donation_company_num, aes(x = 屆數)) +
   theme(panel.grid.major.x = element_blank())
 ```
 
-透過**三屆參與捐獻的營利事業總數**發現，雖然三屆以來的營利事業捐獻總量並沒有太大的變動，但仔細觀察有進行捐獻的營利企業的數量，發現參與捐獻的企業家數在第七屆之後減少了將近 1700 間，從 5700 多間變為大約 4000 間。
+透過**三屆參與捐獻的營利事業總數**發現，雖然三屆以來的營利事業捐獻總量並沒有太大的變動，但仔細觀察有進行捐獻的營利企業的數量，發現參與捐獻的企業家數在第七屆之後減少了大約 1000 間，從 5000 多間變為大約 4000 間。
 
 造成這個巨大改變的原因來自法規對於能夠進行捐獻的企業的要求更加嚴格。然而在企業捐獻家數減少的情況下，第八和第九屆的營利企業捐獻總量依然能夠跟第七屆持平，代表平均而言企業的政治捐獻的金額實際上是有提高的，政黨和企業之間的關係確實如同多數人所想像的越來越緊密。
 
@@ -185,7 +185,7 @@ ggplot(donation_company_num, aes(x = 屆數)) +
 
 ```{r, message=FALSE, fig.align="center"}
 donation_distribution <- donation %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(整體金額 = sum(捐贈金額))
 
 ggplot(donation_distribution, aes(x = 整體金額)) +
@@ -203,21 +203,19 @@ ggplot(donation_distribution, aes(x = 整體金額)) +
 
 | 屆數 | 企業名稱 | 捐獻總金額 |
 |-------|------|--------------------------------------------|
-| 第七屆 | 大慶票券金融股份有限公司 | 3600000 |
-| 第七屆 | 大眾綜合證券股份有限公司 | 3000000 |
-| 第七屆 | 台灣櫻花股份有限公司 | 3000000 |
+| 第七屆 | 大慶證券股份有限公司 | 4400000 |
+| 第七屆 | 大慶票券金融股份有限公司 | 4200000 |
+| 第七屆 | 味丹企業股份有限公司 | 3480000 |
+| 第八屆 | 慈陽金屬工業股份有限公司 | 3800000 |
+| 第八屆 | 遠銀人身保險代理人股份有限公司 | 3500000 |
 | 第八屆 | 吉美建設事業股份有限公司 | 3300000 |
-| 第八屆 | 國美建設股份有限公司 | 3250000 |
-| 第八屆 | 亞東預拌混凝土股份有限公司 | 3000000 |
 | 第九屆 | 中科國際物流股份有限公司 | 3600000 |
-| 第九屆 | 東徽企業股份有限公司 | 3000000 |
-| 第九屆 | 建新國際股份有限公司 | 3000000 |
 | 第九屆 | 金佑股份有限公司 | 3000000 |
 | 第九屆 | 台灣櫻花股份有限公司 | 3000000 |
+| 第九屆 | 建新國際股份有限公司 | 3000000 |
 | 第九屆 | 亞洲水泥股份有限公司 | 3000000 |
+| 第九屆 | 東徽企業股份有限公司 | 3000000 |
 | 第九屆 | 裕通投資股份有限公司 | 3000000 |
-
-結果發現第八屆捐獻金額前三高的企業都是和營造相關的企業。
 
 ### 三屆候選人營利事業捐獻金額收入分布
 
@@ -263,24 +261,24 @@ ggplot(person_distribution, aes(x = 營利事業捐贈收入)) +
 
 ```{r}
 business_cat_political <- donation %>%
-  distinct(屆數, 姓名, 捐贈企業) %>%
+  distinct(屆數, 姓名, 統一編號) %>%
   left_join(person, by = c("姓名", "屆數")) %>%
   filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
-  group_by(屆數, 捐贈企業) %>%
-  count(捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
+  count(統一編號) %>%
   filter(n > 1) %>% 
   mutate(捐獻人數 = ifelse(n >= 1 & n <= 2, "低捐獻人數",
                     ifelse(n >= 3 & n <= 5, "中捐獻人數", "高捐獻人數"))) %>%
   rename(總捐獻人數 = n)
 
 donation_political <- donation %>%
-  distinct(屆數, 姓名, 捐贈企業) %>%
+  distinct(屆數, 姓名, 統一編號) %>%
   left_join(person, by = c("姓名", "屆數")) %>%
   filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
-  group_by(屆數, 捐贈企業, 推薦政黨) %>%
-  count(捐贈企業) %>% 
+  group_by(屆數, 統一編號, 推薦政黨) %>%
+  count(統一編號) %>% 
   ungroup() %>%
-  inner_join(business_cat_political, by = c("捐贈企業", "屆數")) %>%
+  inner_join(business_cat_political, by = c("統一編號", "屆數")) %>%
   mutate(政黨值 = ifelse(推薦政黨 == "民主進步黨", n, 0),
          屆數 = factor(屆數, levels = c("7", "8", "9")))
 ```
@@ -290,7 +288,7 @@ donation_political <- donation %>%
 ```{r, message=FALSE, fig.align="center"}
 donation_political_low <- donation_political %>%
   filter(捐獻人數 == "低捐獻人數") %>%
-  group_by(屆數, 捐贈企業, 總捐獻人數) %>%
+  group_by(屆數, 統一編號, 總捐獻人數) %>%
   summarise(捐獻分數 = sum(政黨值)) %>%
   mutate(政黨捐獻傾向 = 捐獻分數 / 總捐獻人數)
 
@@ -310,7 +308,7 @@ ggplot(donation_political_low, aes(x = 政黨捐獻傾向, y = 屆數, fill = �
 ```{r, message=FALSE, fig.align="center"}
 donation_political_medium <- donation_political %>%
   filter(捐獻人數 == "中捐獻人數") %>%
-  group_by(屆數, 捐贈企業, 總捐獻人數) %>%
+  group_by(屆數, 統一編號, 總捐獻人數) %>%
   summarise(捐獻分數 = sum(政黨值)) %>%
   mutate(政黨捐獻傾向 = 捐獻分數 / 總捐獻人數)
 
@@ -330,7 +328,7 @@ ggplot(donation_political_medium, aes(x = 政黨捐獻傾向, y = 屆數, fill =
 ```{r, message=FALSE, fig.align="center"}
 donation_political_high <- donation_political %>%
   filter(捐獻人數 == "高捐獻人數") %>%
-  group_by(屆數, 捐贈企業, 總捐獻人數) %>%
+  group_by(屆數, 統一編號, 總捐獻人數) %>%
   summarise(捐獻分數 = sum(政黨值)) %>%
   mutate(政黨捐獻傾向 = 捐獻分數 / 總捐獻人數)
 
@@ -361,21 +359,21 @@ ggplot(donation_political_high, aes(x = 政黨捐獻傾向, y = 屆數, fill = �
 
 ```{r}
 business_cat_winning <- donation %>%
-  distinct(屆數, 姓名, 捐贈企業) %>%
+  distinct(屆數, 姓名, 統一編號) %>%
   left_join(person, by = c("姓名", "屆數")) %>%
   filter(推薦政黨 %in% c("民主進步黨", "中國國民黨")) %>%
-  group_by(屆數, 捐贈企業) %>%
-  count(捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
+  count(統一編號) %>%
   mutate(捐獻人數 = ifelse(n >= 1 & n <= 2, "低捐獻人數",
                     ifelse(n >= 3 & n <= 5, "中捐獻人數", "高捐獻人數"))) %>%
   rename(總捐獻人數 = n)
 
 donation_winning <- donation %>%
-  distinct(屆數, 姓名, 捐贈企業) %>%
+  distinct(屆數, 姓名, 統一編號) %>%
   inner_join(person, by = c("姓名", "屆數")) %>%
-  group_by(捐贈企業, 當選註記) %>%
-  count(屆數, 捐贈企業) %>%
-  inner_join(business_cat_winning, by = c("捐贈企業", "屆數")) %>%
+  group_by(統一編號, 當選註記) %>%
+  count(屆數, 統一編號) %>%
+  inner_join(business_cat_winning, by = c("統一編號", "屆數")) %>%
   mutate(value = ifelse(當選註記 == "*", n, 0),
          屆數 = factor(屆數, levels = c("7", "8", "9")))
 ```
@@ -385,7 +383,7 @@ donation_winning <- donation %>%
 ```{r, message=FALSE, fig.align="center"}
 donation_winning_low <- donation_winning %>%
   filter(捐獻人數 == "低捐獻人數") %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(捐獻當選比例 = sum(value) / sum(n))
 
 ggplot(donation_winning_low, aes(x = 捐獻當選比例, y = 屆數, fill = 屆數)) +
@@ -405,7 +403,7 @@ ggplot(donation_winning_low, aes(x = 捐獻當選比例, y = 屆數, fill = 屆�
 ```{r, message=FALSE, fig.align="center"}
 donation_winning_medium <- donation_winning %>%
   filter(捐獻人數 == "中捐獻人數") %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(捐獻當選比例 = sum(value) / sum(n))
 
 ggplot(donation_winning_medium, aes(x = 捐獻當選比例, y = 屆數, fill = 屆數)) +
@@ -425,7 +423,7 @@ ggplot(donation_winning_medium, aes(x = 捐獻當選比例, y = 屆數, fill = �
 ```{r, message=FALSE, fig.align="center"}
 donation_winning_high <- donation_winning %>%
   filter(捐獻人數 == "高捐獻人數") %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(捐獻當選比例 = sum(value) / sum(n))
 
 ggplot(donation_winning_high, aes(x = 捐獻當選比例, y = 屆數, fill = 屆數)) +
@@ -454,28 +452,28 @@ ggplot(donation_winning_high, aes(x = 捐獻當選比例, y = 屆數, fill = 屆
 
 ```{r}
 donate_three <- donation %>%
-  distinct(屆數,  捐贈企業) %>%
-  group_by(捐贈企業) %>%
-  count(捐贈企業) %>%
+  distinct(屆數, 統一編號) %>%
+  group_by(統一編號) %>%
+  count(統一編號) %>%
   filter(n == 3)
 
 donate_three_kuo <- donation %>%
-  filter(捐贈企業 %in% donate_three$捐贈企業) %>%
+  filter(統一編號 %in% donate_three$統一編號) %>%
   inner_join(person %>% select(姓名, 屆數, 推薦政黨), by = c("姓名", "屆數")) %>%
   mutate(value = case_when(推薦政黨 == "中國國民黨" ~ 0, TRUE ~ 1)) %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(all_value = sum(value)) %>%
-  group_by(捐贈企業) %>%
+  group_by(統一編號) %>%
   summarise(kuo = sum(all_value)) %>%
   filter(kuo == 0)
 
 donate_three_min <- donation %>%
-  filter(捐贈企業 %in% donate_three$捐贈企業) %>%
+  filter(統一編號 %in% donate_three$統一編號) %>%
   inner_join(person %>% select(姓名, 屆數, 推薦政黨), by = c("姓名", "屆數")) %>%
   mutate(value = case_when(推薦政黨 == "民主進步黨" ~ 0, TRUE ~ 1)) %>%
-  group_by(屆數, 捐贈企業) %>%
+  group_by(屆數, 統一編號) %>%
   summarise(all_value = sum(value)) %>%
-  group_by(捐贈企業) %>%
+  group_by(統一編號) %>%
   summarise(min = sum(all_value)) %>%
   filter(min == 0)
 ```
@@ -484,8 +482,8 @@ donate_three_min <- donation %>%
 
 ```{r, message=FALSE, fig.align="center"}
 donate_three_kuomin <- donation %>%
-  filter(捐贈企業 %in% c(donate_three_kuo$捐贈企業, donate_three_min$捐贈企業)) %>%
-  mutate(政黨 = case_when(捐贈企業 %in% donate_three_kuo$捐贈企業 ~ "國民黨",
+  filter(統一編號 %in% c(donate_three_kuo$統一編號, donate_three_min$統一編號)) %>%
+  mutate(政黨 = case_when(統一編號 %in% donate_three_kuo$統一編號 ~ "國民黨",
                            TRUE ~ "民進黨")) %>%
   group_by(屆數, 政黨) %>%
   summarise(all = sum(捐贈金額))
@@ -496,58 +494,75 @@ ggplot(donate_three_kuomin) +
   labs(x = "屆數", y = "捐獻金額",
        title = "三屆國民兩黨營利事業捐獻基本盤總金額") +
   basic_theme() +
-  scale_y_continuous(labels = c("零", "五百萬", "一千萬", "一千五百萬", "兩千萬"),
-                     breaks = c(0e+00, 5e+06, 1e+07, 1.5e+07, 2e+07)) +
+  scale_y_continuous(limits = c(0, 2.5e+07),
+                     labels = c("零", "一千萬", "兩千萬", "兩千五百萬"),
+                     breaks = c(0e+00, 1e+07, 2e+07, 2.5e+07)) +
   scale_fill_manual(values=c("#3399CC", "#99CC33")) +
   theme(panel.grid.major.x = element_blank())
 ```
 
-根據**三屆國民兩黨營利事業捐獻基本盤總金額**，在過去三屆的選舉中，若聚焦觀察兩黨各自的營利企業基本盤的捐獻總額，可以發現長期只捐獻國民黨的營利企業在各屆的捐獻總金額遠高於長期只捐獻民進黨的營利企業，多出了將近三倍左右，顯示出國民兩黨確實都有各自高依附性的營利事業，然而那些依附於國民黨的營利企業卻能夠提供更加雄厚的金錢支援。最後進一步找出兩黨各自捐獻金額前十大的企業來源。
+根據**三屆國民兩黨營利事業捐獻基本盤總金額**，在過去三屆的選舉中，若聚焦觀察兩黨各自的營利企業基本盤的捐獻總額，可以發現長期只捐獻國民黨的營利企業在各屆的捐獻總金額遠高於長期只捐獻民進黨的營利企業，多出了兩倍到三倍左右，顯示出國民兩黨確實都有各自高依附性的營利事業，然而那些依附於國民黨的營利企業卻能夠提供更加雄厚的金錢支援。最後進一步找出兩黨各自捐獻金額前十大的企業來源。
 
 ### Top 10 iron donation of KMT and DPP
 
 ```{r, message=FALSE, fig.align="center"}
 donation_top_kuo <- donation %>% 
-  filter(捐贈企業 %in% donate_three_kuo$捐贈企業) %>%
-  group_by(捐贈企業) %>%
+  filter(統一編號 %in% donate_three_kuo$統一編號) %>%
+  group_by(統一編號) %>%
   summarise(all = sum(捐贈金額)) %>%
   arrange(desc(all)) %>%
   head(10)
 
 ggplot(donation_top_kuo) +
-  aes(x = reorder(捐贈企業, all), y = all) +
+  aes(x = reorder(統一編號, all), y = all) +
   geom_bar(stat = "identity", fill = "#3399CC") +
   labs(x = "企業名稱", y = "捐獻總金額",
        title = "國民黨營利事業捐獻基本盤總金額") +
-  scale_y_continuous(labels = c("零", "兩百萬", "四千萬", "六百萬"),
+  scale_y_continuous(labels = c("零", "兩百萬", "四百萬", "六百萬"),
                      breaks = c(0e+00, 2e+06, 4e+06, 6e+06)) +
   coord_flip() +
   basic_theme() +
-  theme(panel.grid.major.y = element_blank())
+  theme(panel.grid.major.y = element_blank()) +
+  scale_x_discrete(
+    breaks=c("73641592", "12105606", "12971297", "84896558", "86683637",
+             "84239055", "11113500", "35320697", "27594080", "22065097"),
+    labels=c("亞東預拌混凝土股份有限公司", "裕元開發建設股份有限公司", "行企股份有限公司",
+             "永翰投資股份有限公司", "裕景實業股份有限公司", "全漢企業股份有限公司",
+             "六和紡織廠股份有限公司", "振發實業股份有限公司", "隆霖多媒體科技股份有限公司",
+             "聯立汽車有限公司")
+    )
 ```
 
 ```{r, message=FALSE, fig.align="center"}
 donation_top_min <- donation %>% 
-  filter(捐贈企業 %in% donate_three_min$捐贈企業) %>%
-  group_by(捐贈企業) %>%
+  filter(統一編號 %in% donate_three_min$統一編號) %>%
+  group_by(統一編號) %>%
   summarise(all = sum(捐贈金額)) %>%
   arrange(desc(all)) %>%
   head(10)
 
 ggplot(donation_top_min) +
-  aes(x = reorder(捐贈企業, all), y = all) +
+  aes(x = reorder(統一編號, all), y = all) +
   geom_bar(stat = "identity", fill = "#99CC33") +
   labs(x = "企業名稱", y = "捐獻總金額",
        title = "民進黨營利事業捐獻基本盤總金額") +
   scale_y_continuous(limits = c(0, 6000000),
-                     labels = c("零", "兩百萬", "四千萬", "六百萬"),
+                     labels = c("零", "兩百萬", "四百萬", "六百萬"),
                      breaks = c(0e+00, 2e+06, 4e+06, 6e+06)) +
   coord_flip() +
   basic_theme() +
-  theme(panel.grid.major.y = element_blank())
+  theme(panel.grid.major.y = element_blank()) +
+  scale_x_discrete(
+    breaks=c("22958907", "69672278", "22000270", "16605130", "68040606",
+             "79254702", "72051941", "22601105", "72202856", "28012908"),
+    labels=c("全國加油站股份有限公司", "好帝一食品有限公司", "日友水產股份有限公司",
+             "巨鋼企業股份有限公司", "三星科技股份有限公司", "協勝發鋼鐵廠股份有限公司",
+             "木通實業股份有限公司", "向榮工業股份有限公司", "奕誠營造有限公司",
+             "平福企業股份有限公司")
+    )
 ```
 
-從**國民黨營利事業捐獻基本盤總金額**可以發現，國民黨前十大基本盤的企業一般來說比較有名，或者隸屬於大型的企業集團，舉例來說，亞東預拌混凝土股份有限公司和遠紡實業股份有限公司皆隸屬於遠東集團、裕景實業股份有限公司隸屬於裕隆集團、六和紡織廠股份有限公司隸屬於六合集團。
+從**國民黨營利事業捐獻基本盤總金額**可以發現，國民黨前十大基本盤的企業一般來說比較有名，或者隸屬於大型的企業集團，舉例來說，亞東預拌混凝土股份有限公司隸屬於遠東集團、裕元開發建設股份有限公司和裕景實業股份有限公司皆隸屬於裕隆集團、六和紡織廠股份有限公司隸屬於六合集團。
 
 從**民進黨營利事業捐獻基本盤總金額**可以觀察到，民進黨前十大基本盤的企業和國民黨的基本盤企業相比不僅較不有名，三屆捐獻總金額也遠遠少了許多，只有兩家營利企業捐獻總金額超過兩百萬，反觀國民黨前十大基本盤企業每一個捐獻總額都超過兩百萬。由此可見，國民黨不僅收穫了更加充沛的營利企業捐獻，他的營利企業基本盤也都是有頭有臉的大型企業，而民進黨就沒有國民黨一般強烈的營利企業基本盤支持。
 
