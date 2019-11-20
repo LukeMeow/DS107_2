@@ -143,7 +143,7 @@ lda_vis <- topicmodels2LDAvis(lda_model)
 serVis(lda_vis, out.dir = 'vis', open.browser = FALSE)
 ```
 
-[主題模型視覺化結果](https://boruyang.github.io/CSX-4001/gossiping_text_mining/vis/)
+[主題模型視覺化結果（請點我）](https://boruyang.github.io/portfolio/topic_popularity_research/vis/)
 
 根據視覺化結果可以看到所有的文章都被分成了 25 種不同的主題，在不同的主題之下可以觀察到前 30 個最相關的詞彙。上面有 lambda 參數可供調整，當 lambda 為 1 的時候，呈現的前 30 個詞彙是完全根據出現的頻率來排序，若把 lambda 值調小，會使得 document-specific 的用詞的權重被提高，也就是會使得一些整體來說出現頻率不那麼高，但是在某一類主題中特別關鍵的詞彙也排進前 30 個相關詞彙。
 
