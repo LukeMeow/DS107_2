@@ -62,19 +62,19 @@ basic_theme <- function() {
 ### Loading data, jieba and dictionary
   
 ```{r, results='hide', message=FALSE, warning=FALSE}
-load("Ptt_gos_feb_post.rda")
-load("Ptt_gos_mar_post.rda")
+load("dataset/Ptt_gos_feb_post.rda")
+load("dataset/Ptt_gos_mar_post.rda")
 allpost <- bind_rows(Ptt_gos_feb_post, Ptt_gos_mar_post)
 allpost <- allpost %>%
   mutate(doc_id = as.character(row_number()))
-load("Ptt_gos_feb_reply.rda")
-load("Ptt_gos_mar_reply.rda")
+load("dataset/Ptt_gos_feb_reply.rda")
+load("dataset/Ptt_gos_mar_reply.rda")
 allreply <- bind_rows(Ptt_gos_feb_reply, Ptt_gos_mar_reply)
 
 segment_not <- c("蔡英文", "蔡總統",  "韓國瑜", "柯文哲", "柯市長", "柯p", "韓市長", "九二共識", "空污", "高雄", "韓粉", "喜韓兒", "藍蛆", "綠吱", "時代力量", "舔共", "假新聞", "笑死", "歐陽娜娜", "爆料公社", "核電", "劈腿", "非洲豬瘟", "屏東燈會")
 jieba <- worker()
 new_user_word(jieba, segment_not)
-stopWords <- readRDS("stopWords.rds")
+stopWords <- readRDS("dataset/stopWords.rds")
 stopWords <- rbind(stopWords, data.frame(word = c("完整", "連結", "網址", "內文", "備註", "來源","新聞標題")))
 ```
 
@@ -400,7 +400,7 @@ ggplot(uniuser_proportion) +
 #### Loading test data
 
 ```{r}
-load("apr_reply.rda")
+load("dataset/apr_reply.rda")
 ```
 
 #### Create sample users

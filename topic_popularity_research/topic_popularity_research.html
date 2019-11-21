@@ -295,19 +295,19 @@ basic_theme &lt;- function() {
 </div>
 <div id="loading-data-jieba-and-dictionary" class="section level3">
 <h3>Loading data, jieba and dictionary</h3>
-<pre class="r"><code>load(&quot;Ptt_gos_feb_post.rda&quot;)
-load(&quot;Ptt_gos_mar_post.rda&quot;)
+<pre class="r"><code>load(&quot;dataset/Ptt_gos_feb_post.rda&quot;)
+load(&quot;dataset/Ptt_gos_mar_post.rda&quot;)
 allpost &lt;- bind_rows(Ptt_gos_feb_post, Ptt_gos_mar_post)
 allpost &lt;- allpost %&gt;%
   mutate(doc_id = as.character(row_number()))
-load(&quot;Ptt_gos_feb_reply.rda&quot;)
-load(&quot;Ptt_gos_mar_reply.rda&quot;)
+load(&quot;dataset/Ptt_gos_feb_reply.rda&quot;)
+load(&quot;dataset/Ptt_gos_mar_reply.rda&quot;)
 allreply &lt;- bind_rows(Ptt_gos_feb_reply, Ptt_gos_mar_reply)
 
 segment_not &lt;- c(&quot;蔡英文&quot;, &quot;蔡總統&quot;,  &quot;韓國瑜&quot;, &quot;柯文哲&quot;, &quot;柯市長&quot;, &quot;柯p&quot;, &quot;韓市長&quot;, &quot;九二共識&quot;, &quot;空污&quot;, &quot;高雄&quot;, &quot;韓粉&quot;, &quot;喜韓兒&quot;, &quot;藍蛆&quot;, &quot;綠吱&quot;, &quot;時代力量&quot;, &quot;舔共&quot;, &quot;假新聞&quot;, &quot;笑死&quot;, &quot;歐陽娜娜&quot;, &quot;爆料公社&quot;, &quot;核電&quot;, &quot;劈腿&quot;, &quot;非洲豬瘟&quot;, &quot;屏東燈會&quot;)
 jieba &lt;- worker()
 new_user_word(jieba, segment_not)
-stopWords &lt;- readRDS(&quot;stopWords.rds&quot;)
+stopWords &lt;- readRDS(&quot;dataset/stopWords.rds&quot;)
 stopWords &lt;- rbind(stopWords, data.frame(word = c(&quot;完整&quot;, &quot;連結&quot;, &quot;網址&quot;, &quot;內文&quot;, &quot;備註&quot;, &quot;來源&quot;,&quot;新聞標題&quot;)))</code></pre>
 </div>
 <div id="data-description" class="section level3">
@@ -437,7 +437,7 @@ topicmodels2LDAvis &lt;- function(x, ...){
 
 lda_vis &lt;- topicmodels2LDAvis(lda_model)
 serVis(lda_vis, out.dir = 'vis', open.browser = FALSE)</code></pre>
-<p><a href="https://boruyang.github.io/CSX-4001/gossiping_text_mining/vis/">主題模型視覺化結果</a></p>
+<p><a href="https://boruyang.github.io/portfolio/topic_popularity_research/vis/">主題模型視覺化結果（請點我）</a></p>
 <p>根據視覺化結果可以看到所有的文章都被分成了 25 種不同的主題，在不同的主題之下可以觀察到前 30 個最相關的詞彙。上面有 lambda 參數可供調整，當 lambda 為 1 的時候，呈現的前 30 個詞彙是完全根據出現的頻率來排序，若把 lambda 值調小，會使得 document-specific 的用詞的權重被提高，也就是會使得一些整體來說出現頻率不那麼高，但是在某一類主題中特別關鍵的詞彙也排進前 30 個相關詞彙。</p>
 <p>得到主題模型的結果後便能夠把文章歸類至不同主題，然而在主題模型的視覺化中，它因為有自己主題編碼的方式（佔比例最大的主題為主題 1，次之的為主題 2，佔比最小的為主題 25），導致視覺化中的主題編碼和實際的主題編碼不同，因此以下列出視覺化中的主題對照到實際的哪個主題，該主題的關鍵詞以及命名。</p>
 <table>
@@ -792,7 +792,7 @@ uniuser_proportion &lt;- gather(uniuser_proportion, topic, proportion, 1:23)</co
 <p>為了比較這兩組名單的預測效果，我另外再從有夠推文紀錄的 id 名單中隨機抽樣出使用者，三組名單中各抽樣 500 人，藉此來比較隨機抽樣和標記出來的潛水客，哪一個在預測推文數量上的表現較佳。</p>
 <div id="loading-test-data" class="section level4">
 <h4>Loading test data</h4>
-<pre class="r"><code>load(&quot;apr_reply.rda&quot;)</code></pre>
+<pre class="r"><code>load(&quot;dataset/apr_reply.rda&quot;)</code></pre>
 </div>
 <div id="create-sample-users" class="section level4">
 <h4>Create sample users</h4>
