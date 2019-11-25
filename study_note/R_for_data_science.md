@@ -33,7 +33,7 @@ ggplot(data = …, mapping = aes(x = …, y = …))) +
   geom_smooth()
 ```
 
-有些 geom function 的呈現涉及統計轉換（statistical transformation），最常見的例子是```geom_bar()```。在該函式中有一個參數為```stat```，預設值為 ”count”，代表在產生圖表時，會根據```aes()```中的```x```去計算該變數中不同類別的 count，並且作為```y```呈現，所以語法呈現如下。
+有些 geom function 的呈現涉及 statistical transformation，最常見的例子是```geom_bar()```。在該函式中有一個參數為```stat```，預設值為 ”count”，代表在產生圖表時，會根據```aes()```中的```x```去計算該變數中不同類別的 count，並且作為```y```呈現，所以語法呈現如下。
 
 ```
 ggplot(data = …) +
@@ -56,7 +56,7 @@ ggplot(data = …) +
 
 之所以要額外設定參數```group```為常數，是因為```geom_bar()```預設將資料根據```x```分組，並且個別計算各組的數量，然而在計算百分比時，所求的是每個類別之於全部資料的佔比，如果沒有額外設定參數```group```為任一常數，會得到每一個類別都是百分之百的結果（電腦會理解為類別 1 佔類別 1 的比例為百分之百，以此類推）。
 
-ggplot2 也能夠有能夠呈現更多統計轉換的繪圖方式，使用的函數為```stat_summary()```，語法舉例如下。
+ggplot2 也有能夠呈現更多 statistical transformation 的繪圖方式，使用的函數為```stat_summary()```，語法舉例如下。
 
 ```
 ggplot(data = …) +
@@ -67,3 +67,12 @@ ggplot(data = …) +
   fun.y = median
 )
 ```
+
+除了和 statistical transformation 相關的參數```stat```之外，```position```也是在 geom function 中值得特別注意的參數，其所涉及的概念為 position adjustment，用以控制```fill```或者```color```呈現的變數在圖表上位置的安排，在```geom_bar()```的應用尤其常見，該參數的預設值為 "stack"，其他可使用的值包括 "identity"、"dodge"、"fill"。
+
+當```geom_bar()```的參數```position```為預設值時，產生的結果就是所謂的 stacked bar chart，每種```x```類別的 bar 會呈現其他變數次數分配的疊加狀態。當參數```position```的值為 "identity"，每種```x```類別的 bar 會呈現其他變數次數分配的絕對值，一般不建議將參數設定為  "identity"，因為在每一條 bar 中，次數分配較多的類別會把次數分配較少的類別覆蓋掉，導致視覺上難以判別差異。
+
+當參數```position```的值為 "fill" 時，呈現的型態會類似於 stacked bar chart，每種```x```類別的 bar 中其他變數的不同類別會疊加起來，不同的是每一條 bar 的高度相同，並且皆為 100%，這種呈現方式用於判別在不同的```x```類別中其他變數類別百分比分配的變化。最後一種參數為 "dodge"，根據不同的```x```類別分組，並且生成數條緊密排列的 bar 來呈現其他變數種類的絕對值，這種呈現方式用於判別在不同的```x```類別中，其他變數的次數分配情形。
+
+
+
