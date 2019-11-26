@@ -78,11 +78,11 @@ ggplot(data = …) +
 
 座標系統的設置也是 ggplot2 中可以靈活調整的部分，以下直接介紹數個常見的函數使用。
 
-* ```coord_flip()```
+* ```coord_flip()```可以將兩軸置換。
 
-* ```coord_quickmap()```
+* ```coord_quickmap()```可以將地圖以合理的比例呈現。
 
-* ```coord_polar()```
+* ```coord_polar()```把預設的 Cartesian coordinate system 改為 polar coordinate system，繪製 pie chart 時是必要的設定。
 
 * ```coord_fixed()```
 
