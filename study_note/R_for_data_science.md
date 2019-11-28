@@ -84,5 +84,17 @@ ggplot(data = …) +
 
 * ```coord_polar()```把預設的 Cartesian coordinate system 改為 polar coordinate system，繪製 pie chart 時是必要的設定。
 
-* ```coord_fixed()```
+* ```coord_fixed()```可以調整視覺化結果的長寬比例，透過參數```ratio```調整縱軸單位之於橫軸單位的比例。
 
+總結以上各種函數和物件，更完整的視覺化語法模版可以呈現如下。
+
+```
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>, 
+     position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
