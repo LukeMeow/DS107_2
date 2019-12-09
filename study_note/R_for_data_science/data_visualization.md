@@ -1,6 +1,6 @@
 ## Study Note: R for Data Science
 
-## Data Visualization
+### Data Visualization
 
 本書介紹的資料視覺化工具是 R packages 中最經典的繪圖套件 ggplot2，ggplot2 在語法以及呈現上的特色為「分層」，每張圖表都是一層一層的函數或者物件堆疊而成。
 
