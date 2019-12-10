@@ -11783,6 +11783,15 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<p><a href="https://stackabuse.com/python-for-nlp-working-with-text-and-pdf-files/">Python for NLP: Working with Text and PDF Files</a></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Reading-Text-Files">Reading Text Files<a class="anchor-link" href="#Reading-Text-Files">&#182;</a></h3>
 </div>
 </div>
@@ -11896,7 +11905,7 @@ We will see how Python can be used to work with text files.
 <div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 讀不出東西！GG！</span>
 </pre></div>
 
 </div>
@@ -12092,6 +12101,502 @@ We
 <h3 id="Writing-to-a-Text-File">Writing to a Text File<a class="anchor-link" href="#Writing-to-a-Text-File">&#182;</a></h3>
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>要寫入一份文件，就必須在<code>open()</code>當中將模式設定為 "w" 或者 "w+"，前者打開文件以寫入，後者打開文件並且能讀取和寫入。若該檔案不存在，則會創造新的檔案。然而需要特別注意的是，若以"w" 或者 "w+" 打開存有內容的檔案，所有的內容將被移除，如下所示。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 東西都不見啦！！GG！！</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>若要對一份文件寫入內容，可使用<code>write()</code>。如果寫完內容後要讀取內容，記得使用<code>seek()</code>將文件的游標移到正確的位置（只要想要打完文件後游標一定是在最後面，所以要完整讀取文件，必須重新調整游標）。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;The file has been rewritten&quot;</span><span class="p">)</span> <span class="c1"># 這個時候寫完游標在最後面</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 要讀取文件之前記得把游標移到起始位置</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+The file has been rewritten
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>然而大多數要寫入文件的時候，是會希望在現有內容的後方加上其他內容，而把所有內容移除再寫入內容，這個時候就必須要將<code>open()</code>的模式改為 "a+"，代表附加(append)和讀取，而寫入內容一樣使用<code>write()</code>。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[36]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># &quot;a+&quot; 因為代表著 append，所以游標預設出現在最後，要讀取文件的話必須調整</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 你看看我們的東西還在！！</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Welcome to Natural Language Processing
+It is one of the most exciting research areas as of today
+We will see how Python can be used to work with text files.
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[37]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This is a new line&quot;</span><span class="p">)</span>
+<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Welcome to Natural Language Processing
+It is one of the most exciting research areas as of today
+We will see how Python can be used to work with text files.
+This is a new line
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>最後我們可以引進 context manager 來打開文件，這樣針對文件讀取或寫入完畢之後，他就會自動關閉文件，而不用特別呼叫<code>close</code>。使用 context manager 的方式是透過<code>with</code>來引導<code>open()</code>，並進行後續的操作。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">myfile</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Welcome to Natural Language Processing
+It is one of the most exciting research areas as of today
+We will see how Python can be used to work with text files.
+This is a new line
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Working-with-PDF-Files">Working with PDF Files<a class="anchor-link" href="#Working-with-PDF-Files">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>python 並沒有內建可以讀取 PDF 檔的套件，因此要透過 <a href="https://pythonhosted.org/PyPDF2/">PyPDF2</a> 進行。以下示範的 PDF 檔來源為<br><a href="http://www.bavtailor.com/wp-content/uploads/2018/10/Lorem-Ipsum.pdf">http://www.bavtailor.com/wp-content/uploads/2018/10/Lorem-Ipsum.pdf</a> 。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>打開 PDF 的方式和打開文件相同，使用<code>open()</code>並放入檔案路徑，使是模式必須要改為 "rb"，代表 read binary，因為大多數 PDF 都是二元格式。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[45]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
+<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Lorem-Ipsum.pdf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>建立好 PDF 的 wrapper 之後，呼叫<code>PdfFileReader()</code>來將 wrapper 轉換為可以進行其他豐富操作的物件（像是計算頁數<code>numPages</code>、取得特定的頁數<code>getPage()</code>、取出特定頁數的文字<code>extractText()</code>等。）。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[47]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
+<span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span> <span class="c1"># 計算全部的頁數</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[47]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>1</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[51]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">first_page</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 取得第一頁的內容</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">first_page</span><span class="o">.</span><span class="n">extractText</span><span class="p">())</span> <span class="c1">#取出該頁的文字</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Lorem Ipsum
+is simply dummy text of the printing and typesetting 
+industry. Lorem Ipsum has been the industry&#39;s standard dummy text ever 
+since the 1500s, when an unknown printer took a galley of type and 
+scrambled it to make a type specimen book. It has survived not only five 
+centuries, but also the leap into electronic typesetting, remaining essentially 
+unchanged. It was popularised in the 1960s with the release of Letraset 
+sheets containing Lorem Ipsum passages, and more recently with desktop 
+publishing software like Aldus PageMaker including versions of Lorem Ipsum.It is a long established fact that a reader will be distracted by the readable 
+content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to 
+using &#39;Content here, content here&#39;, making it look like readable English. 
+Many desktop publishing packages and web page editors now use Lorem 
+Ipsum as their default model text, and a search for &#39;lorem ipsum&#39; will 
+uncover many web sites still in their infancy. Various versions have evolved 
+over the years, sometimes by accident, sometimes on purpose (injected 
+humour and the like).Contrary to popular belief, Lorem Ipsum is not simply random text. It has 
+roots in a pieceof classical Latin literature from 45 BC, making it over 2000 
+years old. Richard McClintock, a Latin professor at Hampden-Sydney College 
+in Virginia, looked up one of the more obscure Latin words, consectetur, 
+from a Lorem Ipsum passage, and going throughthe cites of the word in 
+classical literature, discovered the undoubtable source. Lorem Ipsum comes 
+from sections 1.10.32 and 1.10.33 of &#34;de Finibus Bonorum et Malorum&#34; (The 
+Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a 
+treatise on the theory of ethics, very popular during the Renaissance. The 
+first line of Lorem Ipsum, &#34;Lorem ipsum dolor sit amet..&#34;, comes from a line 
+in section 1.10.32.The standard chunk of Lorem Ipsum used since the 1500s is reproduced 
+below for those interested. Sections 1.10.32 and 1.10.33 from &#34;de Finibus 
+Bonorum et Malorum&#34; by Cicero are also reproduced in their exact original 
+form, accompanied by English versions from the 1914 translation by H. 
+Rackham.
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Writing-to-a-PDF-Document">Writing to a PDF Document<a class="anchor-link" href="#Writing-to-a-PDF-Document">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>這邊將示範把先前 PDF 的內容寫到另外一份 PDF 上。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[64]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
+
+<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Lorem-Ipsum.pdf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
+
+<span class="n">page_one</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>得到了上一份 PDF 的內容後，便可以透過以下的程式寫到另一份 PDF 上。首先透過<code>PdfFileWriter()</code>創造寫 PDF 的物件，再透過<code>addPage()</code>增加 PDF 的頁面並且寫入上一份 PDF 的內容。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[65]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_document_writer</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileWriter</span><span class="p">()</span> <span class="c1"># 創造寫出 PDF 的物件</span>
+<span class="n">pdf_document_writer</span><span class="o">.</span><span class="n">addPage</span><span class="p">(</span><span class="n">page_one</span><span class="p">)</span> <span class="c1"># 增加頁面並且寫入內容</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>接下來再透過<code>open()</code>創造新的檔案，並且將模式改為 "wb"，代表 write binary，最後再透過寫入 PDF 的物件呼叫<code>write()</code>並放入剛生成的檔案，就成功產生一個新的 PDF 了！</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[69]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_output_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;new_pdf_file.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="c1"># 創造新檔案</span>
+<span class="n">pdf_document_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdf_output_file</span><span class="p">)</span> <span class="c1"># 把 PDF 內容放入新創的檔案</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>以下練習讀取一個更大的檔案，連結為 <a href="http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/lipsum/lipsum.pdf">http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/lipsum/lipsum.pdf</a> 。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[71]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
+
+<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;lipsum.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
+<span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span> <span class="c1"># 總共有 87 頁，如果要全部讀取，必須使用迴圈</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[71]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>87</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span><span class="p">):</span>
+    <span class="n">page_to_print</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">page_to_print</span><span class="o">.</span><span class="n">extractText</span><span class="p">())</span> <span class="c1"># 結果太長就不顯示惹</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
 </div>
     </div>
   </div>
