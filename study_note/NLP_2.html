@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>NLP_1</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>NLP_2</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -11775,7 +11775,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="NLP_1-Working-with-Text-and-PDF-Files">NLP_1 Working with Text and PDF Files<a class="anchor-link" href="#NLP_1-Working-with-Text-and-PDF-Files">&#182;</a></h1>
+<h1 id="NLP_2-Tokenization,-Stemming,-and-Lemmatization-with-SpaCy-Library">NLP_2 Tokenization, Stemming, and Lemmatization with SpaCy Library<a class="anchor-link" href="#NLP_2-Tokenization,-Stemming,-and-Lemmatization-with-SpaCy-Library">&#182;</a></h1>
 </div>
 </div>
 </div>
@@ -11783,7 +11783,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><a href="https://stackabuse.com/python-for-nlp-working-with-text-and-pdf-files/">Python for NLP: Working with Text and PDF Files</a></p>
+<p><a href="https://stackabuse.com/python-for-nlp-tokenization-stemming-and-lemmatization-with-spacy-library/">Python for NLP: Tokenization, Stemming, and Lemmatization with SpaCy Library</a></p>
 
 </div>
 </div>
@@ -11792,7 +11792,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Reading-Text-Files">Reading Text Files<a class="anchor-link" href="#Reading-Text-Files">&#182;</a></h2>
+<h2 id="Introduction-to-SpaCy">Introduction to SpaCy<a class="anchor-link" href="#Introduction-to-SpaCy">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -11800,17 +11800,48 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>使用 python 內建的函數<code>open()</code>即可把文件呼叫進環境中。</p>
+<p>SpaCy 和 NLTK 都是進行自然語言處理相當熱門的套件，這兩者的差異在於 NLTK 提供了許多不同的演算法，讓分析者可以自行建構模型，並且透過不同的方式去解決問題，而 SpaCy 提供的是單一能夠解決問題的最佳演算方式。本文件主要會利用 SpaCy 套件來進行 NLP 中幾個核心的操作，包括 tokenization、stemming 和 lemmatization。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Basic-Functionality">Basic Functionality<a class="anchor-link" href="#Basic-Functionality">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>在安裝完畢 SpaCy 的套件後，接下來必須安裝語言模型，用以進行後續的操作，這邊以英文語言模型作為示範。安裝完畢後，就可以呼叫套件和安裝好的模型，並將模型儲存成物件。</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="err">$</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">spacy</span> <span class="n">download</span> <span class="n">en</span> <span class="c1"># 安裝模型</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">spacy</span>
+<span class="n">sp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">)</span> <span class="c1"># 把英文模型存成 sp 物件囉</span>
 </pre></div>
 
 </div>
@@ -11822,90 +11853,20 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>透過<code>print()</code>呈現呼叫進來的文件的儲存格式，可以看到結果為一個 wrapper，且必須要用 read mode 讀取，故再加上<code>read()</code>來讀取文件內容。</p>
+<p>語言模型的物件可以針對句子和文章自動切分成數個 tokens，所謂 token 就是句子中具有語言涵義的單一個體。舉例來說，把 Manchester United is looking to sign a forward for $90 million 餵到模型之中，就可以利用迴圈找出該句子包含的所有 tokens，以及這些 tokens 的性質（文字<code>text</code>、文法特性<code>pos_</code>、相依關係<code>dep_</code>等）。</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="p">)</span>
-</pre></div>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;Manchester United is looking to sign a forward for $90 million&#39;</span><span class="p">)</span>
 
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>&lt;_io.TextIOWrapper name=&#39;myfile.txt&#39; mode=&#39;r&#39; encoding=&#39;UTF-8&#39;&gt;
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 讀取文件內容</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>讀取過一次文件內容後，若在執行一次同樣的程式碼，就不會呈現任何東西了。這是因為在呼叫<code>read()</code>的時候，那份文件的游標就已經走到最後一格，再執行一次函數，自然沒有東西可以呈現。</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[21]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 讀不出東西！GG！</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="c1"># 找出所有 tokens</span>
 </pre></div>
 
 </div>
@@ -11922,7 +11883,18 @@ We will see how Python can be used to work with text files.
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
+<pre>Manchester
+United
+is
+looking
+to
+sign
+a
+forward
+for
+$
+90
+million
 </pre>
 </div>
 </div>
@@ -11931,24 +11903,13 @@ We will see how Python can be used to work with text files.
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>若要避免這個問題，可以使用<code>seek()</code>來調整該文件當中的游標位置以再次讀取文件，只要在<code>seek()</code>中放入 index 代表位置，游標就會移動到該位置。</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[24]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 把游標移到起始位置 </span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>  <span class="n">word</span><span class="o">.</span><span class="n">pos_</span><span class="p">)</span> <span class="c1"># 找出所有 tokens 以及其文法特性</span>
 </pre></div>
 
 </div>
@@ -11965,12 +11926,18 @@ We will see how Python can be used to work with text files.
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
-Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
+<pre>Manchester PROPN
+United PROPN
+is AUX
+looking VERB
+to PART
+sign VERB
+a DET
+forward NOUN
+for ADP
+$ SYM
+90 NUM
+million NUM
 </pre>
 </div>
 </div>
@@ -11978,53 +11945,16 @@ We will see how Python can be used to work with text files.
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>若要結束讀取該文件，記得要養成好習慣，使用<code>close()</code>把文件關閉。</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Reading-Text-Files-Line-by-Line">Reading Text Files Line by Line<a class="anchor-link" href="#Reading-Text-Files-Line-by-Line">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>使用<code>read()</code>可以讀取整份文件，若改為使用<code>readlines()</code>可以逐行讀取文件，且每行都會被放在一個 list 當中呈現。</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[25]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence2</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;Manchester United isn&#39;t looking to sign any forward.&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence2</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>  <span class="n">word</span><span class="o">.</span><span class="n">pos_</span><span class="p">,</span> <span class="n">word</span><span class="o">.</span><span class="n">dep_</span><span class="p">)</span> <span class="c1"># 找出所有 tokens、文法特性及相依關係</span>
 </pre></div>
 
 </div>
@@ -12041,7 +11971,16 @@ We will see how Python can be used to work with text files.
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[&#39;Welcome to Natural Language Processing\n&#39;, &#39;It is one of the most exciting research areas as of today\n&#39;, &#39;We will see how Python can be used to work with text files.&#39;]
+<pre>Manchester PROPN compound
+United PROPN nsubj
+is AUX aux
+n&#39;t PART neg
+looking VERB ROOT
+to PART aux
+sign VERB xcomp
+any DET advmod
+forward ADV advmod
+. PUNCT punct
 </pre>
 </div>
 </div>
@@ -12054,19 +11993,52 @@ We will see how Python can be used to work with text files.
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>這種分行讀取的方式，相較於整份文件的讀取，便於分析者針對每行進行更細緻的操作。舉例來說，假使要獲取每行的第一個字，可以針對儲存文件的 wrapper 進行迴圈，就能夠輕易找出文件中的每一行，或者是進行其他基於每個行數的進階操作。</p>
+<p>除了句子以外，SpaCy 物件也能夠處理文章，並且透過迴圈搭配<code>sents</code>把每個句子找出來。此外也能夠過 index 找出特定位置存在的 token 為何，並利用<code>is_sent_start</code>確認該 token 是否為句首。</p>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[51]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">document</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;Hello from Stackabuse. The site with the best Python Tutorials. What are you looking for?&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">document</span><span class="o">.</span><span class="n">sents</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Hello from Stackabuse.
+The site with the best Python Tutorials.
+What are you looking for?
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">lines</span> <span class="ow">in</span> <span class="n">myfile</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">lines</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># 取得每行的第一個字</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">document</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
 </pre></div>
 
 </div>
@@ -12079,15 +12051,48 @@ We will see how Python can be used to work with text files.
 
 <div class="output_area">
 
-<div class="prompt"></div>
+<div class="prompt output_prompt">Out[27]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome
-It
-We
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>The</pre>
 </div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">document</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">is_sent_start</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[28]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>True</pre>
+</div>
+
 </div>
 
 </div>
@@ -12098,7 +12103,7 @@ We
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Writing-to-a-Text-File">Writing to a Text File<a class="anchor-link" href="#Writing-to-a-Text-File">&#182;</a></h2>
+<h2 id="Tokenization">Tokenization<a class="anchor-link" href="#Tokenization">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -12106,18 +12111,22 @@ We
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>要寫入一份文件，就必須在<code>open()</code>當中將模式設定為 "w" 或者 "w+"，前者打開文件以寫入，後者打開文件並且能讀取和寫入。若該檔案不存在，則會創造新的檔案。然而需要特別注意的是，若以"w" 或者 "w+" 打開存有內容的檔案，所有的內容將被移除，如下所示。</p>
+<p>如同先前所呈現的，tokenization 就是將文章或句子切分成數個含有語意的單位，也就是 token。</p>
+<p>以下再舉一個例子，對 "They're leaving U.K. for U.S.A." 這句話進行 tokenization，會發現前後引號也被視為 token 找出來了，不過電腦卻正確判斷出 U.K. 和 U.S.A. 的 . 為縮寫而非句號。</p>
+<p>而對 Hello, I am non-vegetarian, email me the menu at abc-xyz@gmai.com 進行 tokenization，可以發現郵件地址成功被指認出來，然而 non-vegetarian 的 - 被視為 token 獨立出來了。</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[30]:</div>
+<div class="prompt input_prompt">In&nbsp;[53]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 東西都不見啦！！GG！！</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence3</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;&quot;They</span><span class="se">\&#39;</span><span class="s1">re leaving U.K. for U.S.A.&quot;&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence3</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12134,7 +12143,14 @@ We
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
+<pre>&#34;
+They
+&#39;re
+leaving
+U.K.
+for
+U.S.A.
+&#34;
 </pre>
 </div>
 </div>
@@ -12142,26 +12158,16 @@ We
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>若要對一份文件寫入內容，可使用<code>write()</code>。如果寫完內容後要讀取內容，記得使用<code>seek()</code>將文件的游標移到正確的位置（只要想要打完文件後游標一定是在最後面，所以要完整讀取文件，必須重新調整游標）。</p>
-
-</div>
-</div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[32]:</div>
+<div class="prompt input_prompt">In&nbsp;[33]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-<span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;The file has been rewritten&quot;</span><span class="p">)</span> <span class="c1"># 這個時候寫完游標在最後面</span>
-<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 要讀取文件之前記得把游標移到起始位置</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence4</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s2">&quot;Hello, I am non-vegetarian, email me the menu at abc-xyz@gmai.com&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence4</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12178,10 +12184,55 @@ We
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>
-The file has been rewritten
+<pre>Hello
+,
+I
+am
+non
+-
+vegetarian
+,
+email
+me
+the
+menu
+at
+abc-xyz@gmai.com
 </pre>
 </div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[34]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">sentence4</span><span class="p">)</span> <span class="c1"># 對 tokenize 過後的物件取 len() 可以直接計算 tokens 的數量喔！</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[34]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>14</pre>
+</div>
+
 </div>
 
 </div>
@@ -12192,7 +12243,16 @@ The file has been rewritten
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>然而大多數要寫入文件的時候，是會希望在現有內容的後方加上其他內容，而把所有內容移除再寫入內容，這個時候就必須要將<code>open()</code>的模式改為 "a+"，代表附加(append)和讀取，而寫入內容一樣使用<code>write()</code>。</p>
+<h3 id="Detecting-Entities">Detecting Entities<a class="anchor-link" href="#Detecting-Entities">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>除了找出一個句子的所有 tokens 之外，有時候也需要找出句子當中的 entities，也就是組織、地方、公司或者人名等等。之所以要特別提出 entity 的概念，是因為在一般 tokenize 的過程中，會忽略掉部分多字複合成的單一語意詞。舉例來說，針對 Manchester United is looking to sign Harry Kane for \$90 million 進行 tokenize，Manchester United 這個詞就會被拆成兩個 tokens，Harry Kane 和 $90 million 也是。</p>
+<p>這種找出句子中特別的 entity 的過程，就是在 NLP 中所謂的 NER（Named Entity Recognition，命名實體辨別），要找出句子當中的 entities，只需要從 SpaCy 物件中找出<code>ents</code>性質即可，針對找出來的不同 entities，還能取出各自的文字<code>text</code>和類型標籤<code>label_</code>。</p>
 
 </div>
 </div>
@@ -12202,9 +12262,10 @@ The file has been rewritten
 <div class="prompt input_prompt">In&nbsp;[36]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span>
-<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># &quot;a+&quot; 因為代表著 append，所以游標預設出現在最後，要讀取文件的話必須調整</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span> <span class="c1"># 你看看我們的東西還在！！</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence5</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;Manchester United is looking to sign Harry Kane for $90 million&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence5</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12221,9 +12282,18 @@ The file has been rewritten
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
+<pre>Manchester
+United
+is
+looking
+to
+sign
+Harry
+Kane
+for
+$
+90
+million
 </pre>
 </div>
 </div>
@@ -12234,12 +12304,11 @@ We will see how Python can be used to work with text files.
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[37]:</div>
+<div class="prompt input_prompt">In&nbsp;[39]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">This is a new line&quot;</span><span class="p">)</span>
-<span class="n">myfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">sentence5</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span> <span class="c1"># 對 SpaCy 的 entities 進行迴圈</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="n">entity</span><span class="o">.</span><span class="n">label_</span> <span class="o">+</span> <span class="s1">&#39; - &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">spacy</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">label_</span><span class="p">)))</span> <span class="c1"># 取出文字和標籤</span>
 </pre></div>
 
 </div>
@@ -12256,10 +12325,9 @@ We will see how Python can be used to work with text files.
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
-This is a new line
+<pre>Manchester United - PERSON - People, including fictional
+Harry Kane - PERSON - People, including fictional
+$90 million - MONEY - Monetary values, including unit
 </pre>
 </div>
 </div>
@@ -12272,18 +12340,28 @@ This is a new line
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>最後我們可以引進 context manager 來打開文件，這樣針對文件讀取或寫入完畢之後，他就會自動關閉文件，而不用特別呼叫<code>close</code>。使用 context manager 的方式是透過<code>with</code>來引導<code>open()</code>，並進行後續的操作。</p>
+<h3 id="Detecting-Nouns">Detecting Nouns<a class="anchor-link" href="#Detecting-Nouns">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>除了找出 tokens 和 entities 之外，SpaCy 套件還能夠直接找出句子當中的名詞，只要利用<code>noun_chunks</code>性質即可。</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[40]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;myfile.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">myfile</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">myfile</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence6</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;Latest Rumours: Manchester United is looking to sign Harry Kane for $90 million&#39;</span><span class="p">)</span> 
+
+<span class="k">for</span> <span class="n">noun</span> <span class="ow">in</span> <span class="n">sentence6</span><span class="o">.</span><span class="n">noun_chunks</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">noun</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12300,10 +12378,8 @@ This is a new line
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Welcome to Natural Language Processing
-It is one of the most exciting research areas as of today
-We will see how Python can be used to work with text files.
-This is a new line
+<pre>Manchester United
+Harry Kane
 </pre>
 </div>
 </div>
@@ -12316,7 +12392,7 @@ This is a new line
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Working-with-PDF-Files">Working with PDF Files<a class="anchor-link" href="#Working-with-PDF-Files">&#182;</a></h2>
+<h2 id="Stemming">Stemming<a class="anchor-link" href="#Stemming">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -12324,7 +12400,8 @@ This is a new line
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>python 並沒有內建可以讀取 PDF 檔的套件，因此要透過 <a href="https://pythonhosted.org/PyPDF2/">PyPDF2</a> 進行。以下示範的 PDF 檔來源為<br><a href="http://www.bavtailor.com/wp-content/uploads/2018/10/Lorem-Ipsum.pdf">http://www.bavtailor.com/wp-content/uploads/2018/10/Lorem-Ipsum.pdf</a> 。</p>
+<p>所謂 stemming 就是詞幹提取，也就是把找出一個單字的最原始型態，在英文、德文等語言當中，經常會碰到許多不同的源自同一基礎的字，例如 compute、computer、computing、computed 等等，從分析的角度來看，大多會希望這些字詞能夠被視為同一單詞。</p>
+<p>SpaCy 並沒有可以進行 stemming 的函數，因次要使用到 NLTK 套件，分別使用 Porter Stemmer 和 Snowball Stemmer。</p>
 
 </div>
 </div>
@@ -12333,18 +12410,18 @@ This is a new line
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>打開 PDF 的方式和打開文件相同，使用<code>open()</code>並放入檔案路徑，使是模式必須要改為 "rb"，代表 read binary，因為大多數 PDF 都是二元格式。</p>
-
+<h3 id="Porter-Stemmer">Porter Stemmer<a class="anchor-link" href="#Porter-Stemmer">&#182;</a></h3>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[45]:</div>
+<div class="prompt input_prompt">In&nbsp;[41]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
-<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Lorem-Ipsum.pdf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">nltk</span>
+
+<span class="kn">from</span> <span class="nn">nltk.stem.porter</span> <span class="k">import</span> <span class="o">*</span>
 </pre></div>
 
 </div>
@@ -12352,11 +12429,138 @@ This is a new line
 </div>
 
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[42]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">stemmer</span> <span class="o">=</span> <span class="n">PorterStemmer</span><span class="p">()</span> <span class="c1"># 產生進行 Porter Stemmer 的物件</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[43]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;compute&#39;</span><span class="p">,</span> <span class="s1">&#39;computer&#39;</span><span class="p">,</span> <span class="s1">&#39;computed&#39;</span><span class="p">,</span> <span class="s1">&#39;computing&#39;</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[44]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">token</span> <span class="o">+</span> <span class="s1">&#39; --&gt; &#39;</span> <span class="o">+</span> <span class="n">stemmer</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">token</span><span class="p">))</span> <span class="c1"># 取出每個 tokens 的 root form</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>compute --&gt; comput
+computer --&gt; comput
+computed --&gt; comput
+computing --&gt; comput
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>建立好 PDF 的 wrapper 之後，呼叫<code>PdfFileReader()</code>來將 wrapper 轉換為可以進行其他豐富操作的物件（像是計算頁數<code>numPages</code>、取得特定的頁數<code>getPage()</code>、取出特定頁數的文字<code>extractText()</code>等。）。</p>
+<h3 id="Snowball-Stemmer">Snowball Stemmer<a class="anchor-link" href="#Snowball-Stemmer">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[46]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">nltk.stem.snowball</span> <span class="k">import</span> <span class="n">SnowballStemmer</span>
+
+<span class="n">stemmer</span> <span class="o">=</span> <span class="n">SnowballStemmer</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="s1">&#39;english&#39;</span><span class="p">)</span> <span class="c1"># 產生進行 Snowball Stemmer 的物件</span>
+
+<span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;compute&#39;</span><span class="p">,</span> <span class="s1">&#39;computer&#39;</span><span class="p">,</span> <span class="s1">&#39;computed&#39;</span><span class="p">,</span> <span class="s1">&#39;computing&#39;</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">token</span> <span class="o">+</span> <span class="s1">&#39; --&gt; &#39;</span> <span class="o">+</span> <span class="n">stemmer</span><span class="o">.</span><span class="n">stem</span><span class="p">(</span><span class="n">token</span><span class="p">))</span> <span class="c1"># 取出每個 tokens 的 root form</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>compute --&gt; comput
+computer --&gt; comput
+computed --&gt; comput
+computing --&gt; comput
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>根據前兩個 stemming 的結果，發現都找出了 comput 作為詞幹，然而這個卻是一個不存在的單字，因此一般會使用另一個叫做 lemmatization 的方法，也就是所謂的詞形還原，把先前提到的那些同源詞，還原到一個真實出現在字典的單詞。</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Lemmatization">Lemmatization<a class="anchor-link" href="#Lemmatization">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Lemmatization 的操作使用到 SpaCy 套件，對句子當中的 tokens 取出<code>lemma_</code>性質即可找出其 root form。</p>
 
 </div>
 </div>
@@ -12366,42 +12570,21 @@ This is a new line
 <div class="prompt input_prompt">In&nbsp;[47]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
-<span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span> <span class="c1"># 計算全部的頁數</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence7</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="s1">&#39;compute computer computed computing&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
 </div>
 </div>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[47]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>1</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[51]:</div>
+<div class="prompt input_prompt">In&nbsp;[49]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">first_page</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># 取得第一頁的內容</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">first_page</span><span class="o">.</span><span class="n">extractText</span><span class="p">())</span> <span class="c1">#取出該頁的文字</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence7</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>  <span class="n">word</span><span class="o">.</span><span class="n">lemma_</span><span class="p">)</span> <span class="c1"># 取出 tokens 的詞和還原詞形。</span>
 </pre></div>
 
 </div>
@@ -12418,36 +12601,10 @@ This is a new line
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Lorem Ipsum
-is simply dummy text of the printing and typesetting 
-industry. Lorem Ipsum has been the industry&#39;s standard dummy text ever 
-since the 1500s, when an unknown printer took a galley of type and 
-scrambled it to make a type specimen book. It has survived not only five 
-centuries, but also the leap into electronic typesetting, remaining essentially 
-unchanged. It was popularised in the 1960s with the release of Letraset 
-sheets containing Lorem Ipsum passages, and more recently with desktop 
-publishing software like Aldus PageMaker including versions of Lorem Ipsum.It is a long established fact that a reader will be distracted by the readable 
-content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to 
-using &#39;Content here, content here&#39;, making it look like readable English. 
-Many desktop publishing packages and web page editors now use Lorem 
-Ipsum as their default model text, and a search for &#39;lorem ipsum&#39; will 
-uncover many web sites still in their infancy. Various versions have evolved 
-over the years, sometimes by accident, sometimes on purpose (injected 
-humour and the like).Contrary to popular belief, Lorem Ipsum is not simply random text. It has 
-roots in a pieceof classical Latin literature from 45 BC, making it over 2000 
-years old. Richard McClintock, a Latin professor at Hampden-Sydney College 
-in Virginia, looked up one of the more obscure Latin words, consectetur, 
-from a Lorem Ipsum passage, and going throughthe cites of the word in 
-classical literature, discovered the undoubtable source. Lorem Ipsum comes 
-from sections 1.10.32 and 1.10.33 of &#34;de Finibus Bonorum et Malorum&#34; (The 
-Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a 
-treatise on the theory of ethics, very popular during the Renaissance. The 
-first line of Lorem Ipsum, &#34;Lorem ipsum dolor sit amet..&#34;, comes from a line 
-in section 1.10.32.The standard chunk of Lorem Ipsum used since the 1500s is reproduced 
-below for those interested. Sections 1.10.32 and 1.10.33 from &#34;de Finibus 
-Bonorum et Malorum&#34; by Cicero are also reproduced in their exact original 
-form, accompanied by English versions from the 1914 translation by H. 
-Rackham.
+<pre>compute compute
+computer computer
+computed compute
+computing computing
 </pre>
 </div>
 </div>
@@ -12456,106 +12613,15 @@ Rackham.
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Writing-to-a-PDF-Document">Writing to a PDF Document<a class="anchor-link" href="#Writing-to-a-PDF-Document">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>這邊將示範把先前 PDF 的內容寫到另外一份 PDF 上。</p>
-
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[64]:</div>
+<div class="prompt input_prompt">In&nbsp;[50]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sentence8</span> <span class="o">=</span> <span class="n">sp</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;A letter has been written, asking him to be released&#39;</span><span class="p">)</span>
 
-<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Lorem-Ipsum.pdf&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rb&#39;</span><span class="p">)</span>
-<span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
-
-<span class="n">page_one</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>得到了上一份 PDF 的內容後，便可以透過以下的程式寫到另一份 PDF 上。首先透過<code>PdfFileWriter()</code>創造寫 PDF 的物件，再透過<code>addPage()</code>增加 PDF 的頁面並且寫入上一份 PDF 的內容。</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[65]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_document_writer</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileWriter</span><span class="p">()</span> <span class="c1"># 創造寫出 PDF 的物件</span>
-<span class="n">pdf_document_writer</span><span class="o">.</span><span class="n">addPage</span><span class="p">(</span><span class="n">page_one</span><span class="p">)</span> <span class="c1"># 增加頁面並且寫入內容</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>接下來再透過<code>open()</code>創造新的檔案，並且將模式改為 "wb"，代表 write binary，最後再透過寫入 PDF 的物件呼叫<code>write()</code>並放入剛生成的檔案，就成功產生一個新的 PDF 了！</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[69]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pdf_output_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;new_pdf_file.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="c1"># 創造新檔案</span>
-<span class="n">pdf_document_writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdf_output_file</span><span class="p">)</span> <span class="c1"># 把 PDF 內容放入新創的檔案</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>以下練習讀取一個更大的檔案，連結為 <a href="http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/lipsum/lipsum.pdf">http://ctan.math.utah.edu/ctan/tex-archive/macros/latex/contrib/lipsum/lipsum.pdf</a> 。</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[71]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">PyPDF2</span>
-
-<span class="n">mypdf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;lipsum.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
-<span class="n">pdf_document</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfFileReader</span><span class="p">(</span><span class="n">mypdf</span><span class="p">)</span>
-<span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span> <span class="c1"># 總共有 87 頁，如果要全部讀取，必須使用迴圈</span>
+<span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence8</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;  ===&gt;&#39;</span><span class="p">,</span> <span class="n">word</span><span class="o">.</span><span class="n">lemma_</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12568,32 +12634,25 @@ Rackham.
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[71]:</div>
+<div class="prompt"></div>
 
 
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>87</pre>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>A  ===&gt; a
+letter  ===&gt; letter
+has  ===&gt; have
+been  ===&gt; be
+written  ===&gt; write
+,  ===&gt; ,
+asking  ===&gt; ask
+him  ===&gt; -PRON-
+to  ===&gt; to
+be  ===&gt; be
+released  ===&gt; release
+</pre>
+</div>
 </div>
 
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pdf_document</span><span class="o">.</span><span class="n">numPages</span><span class="p">):</span>
-    <span class="n">page_to_print</span> <span class="o">=</span> <span class="n">pdf_document</span><span class="o">.</span><span class="n">getPage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">page_to_print</span><span class="o">.</span><span class="n">extractText</span><span class="p">())</span> <span class="c1"># 結果太長就不顯示惹</span>
-</pre></div>
-
-</div>
 </div>
 </div>
 
