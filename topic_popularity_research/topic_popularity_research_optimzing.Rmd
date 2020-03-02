@@ -1,0 +1,510 @@
+---
+title: "PTT Gossiping Topic Popularity Research"
+subtitle: "Which Topics Are Popular in PTT Gossiping ?"
+author: "Bo-Ru, Yang"
+date: "July 2019"
+output: 
+  html_document:
+    code_folding: show
+    theme: simplex
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+---
+
+<style>
+
+body {
+    color: #555555;
+    font-size: 14px;
+}
+
+</style>
+
+## Notes
+
+
+
+### Goals of this document
+
+PTT 八卦版上有許多關於不同議題的討論，在一定程度上能夠代表 25 到 40 歲年齡層的意見。而在這個平台之上，透過將不同的文章適當地分類，可以反映出不同時刻下的熱門話題，也能夠找出對於八卦版使用者而言，哪些議題得到較多的關注，而哪些議題只受到部分使用者的討論。
+
+然而關於一個主題是否熱門或是受到關注，是包含許多面向的問題，像是該類主題被發布的次數、被回覆的次數以及能夠吸引到哪些使用者等等，故難以用單一面向的指標衡量。這份文件的目標就是為 PTT 八卦版的文章進行主題分類，並且找出合理判斷主題熱門程度的指標，最後探討後續應用的可能性。
+
+### Original data source
+
+這份文件所使用的資料來源為 [PTT 八卦版](https://www.ptt.cc/bbs/Gossiping/index.html)在 2019 年二月和三月的所有貼文和推文。
+
+## Preparation, data loading and description
+
+### Loading packages and setting
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(data.table) # data manipulation
+library(tidyverse) # data manipulation
+library(jiebaR) # chinese segmentation
+library(tidytext) # text data handling
+library(topicmodels) # topic modeling
+library(LDAvis) # lda visualization
+library(servr) # uploading visualization
+library(igraph) # network analysis
+library(ade4) # network analysis
+options(stringsAsFactors = FALSE)
+basic_theme <- function() {
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 15),
+        plot.subtitle = element_text(hjust = 0.5, size = 12),
+        plot.margin = unit(c(5, 10, 5, 10), "mm"),
+        axis.title.x = element_text(vjust = -1),
+        axis.title.y = element_text(vjust = 3),
+        text = element_text(family = "PingFangTC-Regular"))
+}
+```
+
+### Loading data, jieba and dictionary
+  
+```{r, results='hide', message=FALSE, warning=FALSE}
+load("dataset/Ptt_gos_feb_post.rda")
+load("dataset/Ptt_gos_mar_post.rda")
+allpost <- bind_rows(Ptt_gos_feb_post, Ptt_gos_mar_post)
+allpost <- allpost %>%
+  mutate(doc_id = as.character(row_number()))
+load("dataset/Ptt_gos_feb_reply.rda")
+load("dataset/Ptt_gos_mar_reply.rda")
+allreply <- bind_rows(Ptt_gos_feb_reply, Ptt_gos_mar_reply)
+
+segment_not <- c("蔡英文", "蔡總統",  "韓國瑜", "柯文哲", "柯市長", "柯p", "韓市長", "九二共識", "空污", "高雄", "韓粉", "喜韓兒", "藍蛆", "綠吱", "時代力量", "舔共", "假新聞", "笑死", "歐陽娜娜", "爆料公社", "核電", "劈腿", "非洲豬瘟", "屏東燈會")
+jieba <- worker()
+new_user_word(jieba, segment_not)
+stopWords <- readRDS("dataset/stopWords.rds")
+stopWords <- rbind(stopWords, data.frame(word = c("完整", "連結", "網址", "內文", "備註", "來源","新聞標題")))
+```
+
+### Data description
+
+#### `貼文資料概述 (allpost)`
+
+| Attribute | Type | Description |
+|-------|------|-----------------------------|
+| post | String | 貼文文章內容 |
+| uid | String | 貼文者 id |
+| title | String | 貼文文章標題 |
+| timestamp | String | 貼文時間 |
+| url | String | 文章網址 |
+| doc_id | String | 文章編號 |
+
+#### `推文資料概述 (allreply)`
+
+| Attribute | Type | Description |
+|-------|------|--------------------------------------------|
+| row_id | Numeric | 推文樓層數 |
+| push | String | 推文的推、噓或中立指標 |
+| id | String | 推文者 id |
+| reply | String | 推文內容 |
+| timestamp | String | 推文時間 |
+| url | String | 被推文文章的網址 |
+
+## Topic modeling
+
+### Data preprocessing
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+allpost <- as.data.table(allpost)
+
+allpost_tokenized <- allpost %>%
+  .[, .(post, doc_id)] %>%
+  .[, word := purrr::map(post, function(x) segment(x, jieba))] %>%
+  unnest(word) %>%
+  .[!stopWords, on = "word"] %>%
+  .[, word := gsub("[A-Za-z0-9.]", "", word)] %>%
+  .[nchar(word) > 1] %>%
+  .[, .N, .(doc_id, word)]
+```
+
+### Making DTM, LDA model and visualization 
+
+預設存在 25 個主題，將八卦版二月和三月所有貼文透過主題模型進行分類。
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+allpost_dtm <- allpost_tokenized %>% cast_dtm(doc_id, word, N)
+lda_model <- LDA(allpost_dtm, 25, method = "Gibbs", control = list(seed = 1234)) 
+
+topicmodels2LDAvis <- function(x, ...){
+    post <- posterior(x)
+    if (ncol(post[["topics"]]) < 3) stop ("The model must contain > 2 topics")
+    mat <- x@wordassignments
+    LDAvis::createJSON(
+        phi = post[["terms"]], 
+        theta = post[["topics"]],
+        vocab = colnames(post[["terms"]]),
+        doc.length = slam::row_sums(mat, na.rm = TRUE),
+        term.frequency = slam::col_sums(mat, na.rm = TRUE)
+    )
+}
+
+lda_vis <- topicmodels2LDAvis(lda_model)
+serVis(lda_vis, out.dir = 'vis', open.browser = FALSE)
+```
+
+[主題模型視覺化結果（請點我）](https://boruyang.github.io/portfolio/topic_popularity_research/vis/)
+
+根據視覺化結果可以看到所有的文章都被分成了 25 種不同的主題，在不同的主題之下可以觀察到前 30 個最相關的詞彙。上面有 lambda 參數可供調整，當 lambda 為 1 的時候，呈現的前 30 個詞彙是完全根據出現的頻率來排序，若把 lambda 值調小，會使得 document-specific 的用詞的權重被提高，也就是會使得一些整體來說出現頻率不那麼高，但是在某一類主題中特別關鍵的詞彙也排進前 30 個相關詞彙。
+
+得到主題模型的結果後便能夠把文章歸類至不同主題，然而在主題模型的視覺化中，它因為有自己主題編碼的方式（佔比例最大的主題為主題 1，次之的為主題 2，佔比最小的為主題 25），導致視覺化中的主題編碼和實際的主題編碼不同，因此以下列出視覺化中的主題對照到實際的哪個主題，該主題的關鍵詞以及命名。
+
+| 視覺化主題編碼 | 實際主題編碼 | 主題名稱 | 主題關鍵詞 |
+|-------|------|-------|-------------------------------------|
+| 1 | 23 | 中美關係 | 美國、中國、中共、國家、表示 |
+| 2 | 20 | 韓國瑜 | 韓國瑜、總統、高雄、市長、民進黨 |
+| 3 | 16 | 刑事案件新聞 | 警方、男子、發現、一名、發生 |
+| 4 | 15 | 理性討論 | 我們、一個、問題、社會、需要 |
+| 5 | 12 | 兩岸議題 | 台灣、中國、國家、美國、大陸 |
+| 6 | 25 | 醫療疾病討論 | 發現、醫師、研究、醫院、醫生 |
+| 7 | 17 | 法律條文討論 | 法律、酒駕、規定、相關、公投 |
+| 8 | 22 | 過年活動 | 高雄、台北、活動、過年、觀光 |
+| 9 | 6 | 一般新聞轉貼 | 新聞、網友、媒體、報導、表示 |
+| 10 | 18 | 柯文哲 | 柯文哲、現在、民進黨、支持、政治 |
+| 11 | 21 | 一般性討論 | 覺得、真的、現在、比較、知道 |
+| 12 | 3 | 市場投資 | 市場、經濟、投資、公司、去年 |
+| 13 | 4 | 內政相關議題 | 政府、表示、問題、市府、地方 |
+| 14 | 11 | 家庭與感情 | 女生、朋友、小孩、媽媽、女友 |
+| 15 | 8 | 廢文 | 看到、一個、今天、一直、知道 |
+| 16 | 2 | 偏激言論討論 | 一堆、知道、真的、這種、根本 |
+| 17 | 10 | 日韓歷史文化 | 日本、歷史、韓國、世界、當時 |
+| 18 | 7 | 娛樂新聞 | 影片、電影、粉絲、喜歡、節目 |
+| 19 | 24 | 廢文 | 投票、時間、東西、老闆、好吃 |
+| 20 | 1 | 3C和遊戲 | 遊戲、手機、使用、技術、系統 |
+| 21 | 19 | 宗教討論 | 一個、變成、世界、知道、故事 |
+| 22 | 13 | 交通事故新聞 | 機車、駕駛、司機、看到、計程車 |
+| 23 | 9 | 台大醫學系八卦 | 學生、大學、老師、學校、台大 |
+| 24 | 5 | 華航罷工 | 罷工、機師、華航、公司、工作 |
+| 25 | 14 | 廢文 | 有沒有、八卦、肥宅、是不是、最近 |
+
+以上呈現的就是在 PTT 八卦版中 2019 年二月到三月中重要的主題。
+
+### Assigning topics to documents
+
+確定了主題編碼和命名後，接下來就必須把這些主題分派回文件以利後續的分析。由於主題模型是利用貝氏統計的概念來進行分類，因此一份文件屬於哪一個主題並不是被武斷地分類出來的結果，而是計算一份文件屬於不同主題的機率各是多少，因此在分派主題時，要找出每一份文件所能夠對應到的最大機率的主題分類，並以此作為該文件的主題。
+
+在這樣的思維之下，如果一份文件的內容非常切合到特定主題，那麼它屬於該主題的機率就會很大，屬於其他主題的機率就會很小。若存在一份文件都不太適合已經分類出來的主題，那該文件之於不同主題的機率分配，就會相當均勻並且機率值都不會很大。站在想要讓分析的目標明確的角度來看，會希望分析的文件都能夠被明確分到特定主題，因此我找出每一個文件最有可能被分配到的主題，並將該主題指派回該文件，再剔除掉主題最大機率分類小於 0.2 的文件（因為這些文件通常不適合已經分類出來的主題）。
+
+```{r, message=FALSE, warning=FALSE}
+topic_classification <- tidy(lda_model, matrix = "gamma") %>%
+  as.data.table() %>%
+  .[order(gamma), tail(.SD, 1), document] %>%
+  .[gamma > 0.2, .(doc_id = document, topic, gamma)]
+
+post_with_topic <- topic_classification_1 %>%
+  .[, gamma := NULL] %>%
+  allpost[., on = "doc_id"] %>%
+  .[, topic_name := case_when(topic == 1 ~ "3C和遊戲", topic == 2 ~ "偏激言論討論",
+                              topic == 3 ~ "市場投資", topic == 4 ~ "內政相關議題",
+                              topic == 5 ~ "華航罷工", topic == 6 ~ "一般新聞轉貼",
+                              topic == 7 ~ "娛樂新聞", topic == 9 ~ "台大醫學系八卦",
+                              topic == 10 ~ "日韓歷史文化", topic == 11 ~ "家庭與感情",
+                              topic == 12 ~ "兩岸議題", topic == 13 ~ "交通事故新聞",
+                              topic == 15 ~ "理性討論", topic == 16 ~ "刑事案件新聞",
+                              topic == 17 ~ "法律條文討論", topic == 18 ~ "柯文哲",
+                              topic == 19 ~ "宗教討論", topic == 20 ~ "韓國瑜",
+                              topic == 21 ~ "一般性討論", topic == 22 ~ "過年活動",
+                              topic == 23 ~ "中美關係", topic == 25 ~ "醫療疾病討論",
+                              TRUE ~ "廢文")]
+```
+
+## Measuring topic popularity
+
+完成了文章的主題分類後，我們便要進一步探討在 PTT 的八卦版上，哪一類主題的文章是特別熱門的主題，或者說受到更多使用者的關注。在這個階段的分析，我首先從貼文數量的角度出發，並且加入時間的向度，試圖找出能夠體現主題熱門程度的跡象。
+
+### Volume of posts
+
+#### Data preprocessing
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+post_with_topic_plot <- post_with_topic %>%
+  .[, .(topic_name, timestamp = str_replace(timestamp, "  ", " "))] %>%
+  separate(timestamp, c("day", "month", "date"), sep = " ") %>%
+  .[, .(topic_name, month, date = as.numeric(date))] %>%
+  .[, week := case_when(month == "Feb" & date <= 7 ~ "Feb w1",
+                        month == "Feb" & date <= 14 & date > 7 ~ "Feb w2",
+                        month == "Feb" & date <= 21 & date > 14 ~ "Feb w3",
+                        month == "Feb" & date <= 28 & date > 21 ~ "Feb w4",
+                        month == "Mar" & date <= 7 ~ "Mar w1",
+                        month == "Mar" & date <= 14 & date > 7 ~ "Mar w2",
+                        month == "Mar" & date <= 21 & date > 14 ~ "Mar w3",
+                        TRUE ~ "Mar w4")] %>%
+  .[, .N, .(topic_name, week)]
+```
+
+#### Total number of posts
+
+```{r, message=FALSE, fig.align="center"}
+post_number <- post_with_topic_plot %>%
+  .[, .(sum = sum(N)), topic_name]
+
+ggplot(post_number) +
+  aes(x = reorder(topic_name, sum), y = sum) +
+  geom_bar(stat = "identity", fill = "dodgerblue2") +
+  labs(x = "主題", y = "貼文總數",
+       title = "PTT 八卦版各主題貼文則數") +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 4000)) +
+  basic_theme()
+```
+
+首先統計出二月到三月之間各個主題的總貼文數，根據 **PTT 八卦版各主題貼文則數**可以發現，排名最前的兩個兩個主題分別為韓國瑜以及廢文。至此我們對於 PTT 八卦版的主題分布有了最基本的圖像，然而若直接定論韓國瑜以及廢文的主題在八卦板中最為熱門，就會忽略掉其他重要的面向。例如，在這張描繪長期貼文總量的圖中，並無法凸顯出某些主題在短時間內聲量暴漲的情形，此外，一類主題的貼文則數多，並無法推論該類主題必然受到 PTT 八卦版使用者相應程度的關注。
+
+針對第一個問題，我將時間的面向加入以找出是否有短期獲得大量關注的主題，針對第二個問題，則透過主題網路圖來從使用者的角度呈現不同主題的熱門程度。
+
+#### Popularity trend plot
+
+```{r, message=FALSE, fig.align="center"}
+color25 <- c("dodgerblue2", "#E31A1C", "green4", "#6A3D9A", "#FF7F00", 
+             "black", "gold1", "skyblue2", "#FB9A99", "palegreen2",
+             "#CAB2D6", "#FDBF6F", "gray70", "khaki2", "maroon",
+             "orchid1", "deeppink1", "blue1", "steelblue4", "darkturquoise",
+             "green1", "yellow4", "yellow3", "darkorange4", "brown")
+
+ggplot(post_with_topic_plot, aes(x = week, y = N, fill = topic_name)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_fill_manual(values = color25, name = "主題") +
+  labs(x = "時間", y = "比例",
+       title = "PTT 八卦版主題貼文熱度趨勢") +
+  basic_theme() +
+  theme(panel.grid.major.x = element_blank()) +
+  theme(axis.text.x = element_text(size = 7))
+```
+
+從 **PTT 八卦版主題貼文熱度趨勢**來看，可以發現絕大部分的主題在二月到三月的期間內佔可分類文章的比例都相當固定，然而也出現了先前所猜想的特定主題在短期貼文數量暴漲的情況，以下說明幾個有趣的發現。
+
+- 華航罷工的主題在二月的第二週貼文數量暴漲，佔了所有可分類文章比例的四分之一，而在其他時間，幾乎沒有這類主題的文章被發布。
+
+- 台大醫學系八卦的主題也有和華航罷工類似的特徵，只是情況沒有那麼極端，在二月的第三週文章佔比突然上升，接著又再消退，然而消退的情況沒有華航罷工那麼明顯，原因可能是在於一些單純和醫生或者醫學相關的文章也被分類到這個主題當中。
+
+- 兩岸議題主題的文章和其他主題相比，在這段時間的整體佔比變化較大。
+
+- 韓國瑜主題的文章從二月到三月，整體佔比穩定上升，而廢文主題的文章，長期維持相對較高且穩定的文章佔比。
+
+### Network structure of topics
+
+在前述的分析即使把時間的面向納入考量，仍然無法解決第二個問題，也就是貼文數量不必然和使用者的關注程度有正向關係。舉個簡單的例子，我們已經知道廢文主題的貼文數量是高居第二，但若仔細觀察這類主題的文章關鍵字，都是「有沒有、八卦、肥宅、看到、一個」等等這類的關鍵字，若是對 PTT 八卦版生態熟悉的人，必然知道這類的文章不是 PTT 絕大多數人關注的主題，只是單純被發布的次數很多而已。
+
+為了避免這種可能存有偏誤的測量，我們必須跳脫出貼文數量的指標，並且轉換角度從推文者相關的指標來思考主題的熱門程度，也就是哪些主題的文章更容易吸引到 PTT 八卦版使用者的回應，以下透過 **PTT 八卦版主題網路圖**來解決這個問題。
+
+#### Data preprocessing
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+reply_with_topic <- post_with_topic %>%
+  .[allreply, on = "url", nomatch = 0] %>%
+  .[, .(topic_name, id)]
+
+edge_list <- reply_with_topic %>%
+  .[, .N, .(id, topic_name)] %>%
+  .[N >= 4, .(id, topic_name)]
+
+igraph_item <- graph.data.frame(edge_list_1, directed = FALSE)
+V(igraph_item)$type <- bipartite_mapping(igraph_item)$type # identifying two-mode networks
+bipartite_matrix <- as_incidence_matrix(igraph_item) # creating two-mode matrix
+binary_adjacency_matrix <- as.matrix(dist.binary(t(bipartite_matrix), method = 2, upper = TRUE, diag = FALSE))
+binary_adjacency_matrix <- ifelse(binary_adjacency_matrix > 0.5, 1, 0)
+```
+
+#### Topic network plot
+
+```{r, message=FALSE, fig.align="center"}
+net_graph <- graph.adjacency(binary_adjacency_matrix, mode = "undirected", weighted = TRUE, diag = FALSE)
+closeness <- closeness(net_graph, mode = "all")
+E(net_graph)$color <- "lightgray"
+V(net_graph)$color <- "lightblue"
+V(net_graph)$label.color <- "black"
+V(net_graph)$frame.color <-  "gray"
+set.seed(1232)
+par(family = ("PingFangTC-Regular"))
+plot(net_graph, vertex.size = closeness*600-5, vertex.label.cex = 0.5, vertex.label.family = "PingFangTC-Regular", main = "PTT 八卦版主題網路圖")
+```
+
+在 **PTT 八卦版主題網路圖**中，每一個節點代表一個主題，任一 A 節點與 B 節點之間的連結代表 A 和 B 兩主題之間存在有較多的共同回覆者，也就是回覆 A 主題（B 主題）的人通常也可能會回覆 B 主題（A 主題）。節點的大小代表該主題的接近中心性(closeness centrality)，接近中心性越高則該節點會越大，代表該主題是多數使用者偏好回應的主題，且出現位置會越靠近網路的正中心。
+
+根據這張網路圖，可以發現普遍使用者最喜歡回覆的文章主題為「韓國瑜、兩岸議題、刑事案件新聞」，這三類的文章正好佔據了貼文總數排名的第一、三、四名，位處第二名的廢文，在整個網路的結構中，反而處於相對邊陲的位置，證實這類文章僅僅是貼文的數量多，實際卻無法吸引足夠的使用者關注。
+
+透過網路分析的方法，能夠有效排除發文數量膨脹導致誤判主題熱門程度的偏誤，並且從使用者的行為更根本地判斷使用者對於主題回覆的偏好。然而網路分析仍有其缺陷存在，在社群討論的觀察中，那些快速竄起的討論話題往往也是重要的觀察對象，然而這類主題之所以能夠快速引起討論，其中一大重要原因是它能夠吸引出平時不會對回覆任何主題的使用者進行回覆，而這類使用者就是所謂的潛水客。在網路分析中，潛水客的重要性是被低估甚至排除的，因為在網路中個別主題的熱門程度代表的是該主題能夠吸引足夠多元的使用者的討論，舉個例子來說，韓國瑜作為一個熱門主題，讓回覆了「宗教討論、過年活動、娛樂新聞」等等較不熱門的主題的使用者也會去回覆韓國瑜的主題，而潛水客們因為平時沒有回覆文章的行為，導致他們即使在短暫時間內成為特定主題爆紅的部分推手，也無法在主題網路途中呈現出來。
+
+為了解決這個問題，最後一個部分要從推文者的性質來思考主題的熱門程度，以讓潛水客對於議題討論的重要性被凸顯出來。
+
+### Volume of lurking repliers
+
+我們首先對潛水客進行清楚的定義，在我的分析當中，若在二月到三月的時間當中，只有對一種或是兩種主題的文章推文，就會被我定義為潛水客。
+
+#### Data preprocessing
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+uniuser_number <- as.data.table(bipartite_matrix) %>%
+  .[, sum := rowSums(.SD)] %>%
+  .[sum <= 2] %>%
+  .[, lapply(.SD, sum)] %>%
+  .[, sum := NULL]
+
+topic_all_user <- diag(t(bipartite_matrix) %*% bipartite_matrix)
+uniuser_proportion <- uniuser_number/topic_all_user
+uniuser_proportion <- gather(uniuser_proportion, topic, proportion, 1:23)
+```
+
+#### percentage of lurking repliers in each topic
+
+```{r, message=FALSE, fig.align="center"}
+ggplot(uniuser_proportion) +
+  aes(x = reorder(topic, proportion), y = proportion) +
+  geom_bar(stat = "identity", fill = "dodgerblue2") +
+  coord_flip() +
+  xlab("主題") +
+  ylab("比例") +
+  ggtitle("PTT 八卦版各主題潛水客比例") +
+  basic_theme()
+```
+
+根據 **PTT 八卦版各主題潛水客比例**，可以看到潛水客比例最高的主題是華航罷工以及韓國瑜的主題，大約有將近兩成五的潛水客。
+
+華航罷工的高比例潛水客，呈現出這個主題的貼文熱度之所以在二月第二週快速竄起之後又快速消退，是因為有許多平常不會推文的使用者，看到這種和勞動權益相關的大型事件，認為必須出來發聲，故很難得地進行推文。透過這種分析方式，證實了潛水客確實是華航罷工主題聲量竄起的重要原因之一，凸顯出熱門主題的其他重要面向。
+
+韓國瑜的主題同樣擁有大於兩成的潛水客，搭配上穩定的貼文熱度、高貼文數量，主題網路中也處於中心位置的事實，我認為背後的成因是韓國瑜相關的主題和新聞在這兩個月的時間內持續出現大大小小的爆點，不同的爆點能夠有效吸引不同潛水客的回覆，另外也存在一群對於該主題有高度關注的使用者長期在對這類主題推文，故使得韓國瑜主題同時擁有高主題網路中心性和高潛水客比例兩個重要的熱門貼文特徵。
+
+### Summary of topic popularity
+
+透過 LDA 主題模型我們找出了在 PTT 八卦板中的主題，並且試圖找出不同主題受到關注的程度為何。我們理解主題受關注的程度，切入的面向包括貼文總則數、貼文趨勢變化、主題網路結構和潛水客比例，透過綜觀這些不同的指標，才有辦法正確理解不同主題如何被八卦版使用者看待，以及各自的熱門程度為何。以下特別提出幾個較有特色的主題進行說明：
+
+- 華航罷工主題：華航罷工相關的討論在本次的資料中，貼文熱度竄起速度最快，成為一週內最熱門的主題，並且在事件結束後快速消退。在主題網路結構中的重要性也僅次於群聚在結構中央的三個主題，並且擁有最高的潛水客比例。以上這些指標顯示出在相關事件爆發之後，這個議題立即受到八卦版使用者最大程度的關注，甚至召喚出了許多平常在八卦版上不會推文的使用者的聲援。
+
+- 韓國瑜主題：該主題在主題網路上處於重要的位置，同時也擁有相當高比例的潛水客。韓國瑜主題的文章原先就是八卦版常客較偏好的推文主題，同時該主題又存在部分來自潛水客的推文，這背後所代表的意涵是該主題能夠不斷地吸引到不同的潛水客推文，同時又有一大批本來就很關注相關議題的使用者推文。
+
+- 廢文主題：廢文主題在 PTT 八卦版的推文熱度相當穩定，並且擁有次高的推文則數，在主題網路結構中卻處於相當邊緣的位置，也有高達一成五的潛水客比例（排名第六），顯示出這類文章在八卦版上只是被發布得很多，實際上大部份的使用者對這樣主題並不是很有興趣，但即便如此，廢文主題仍存在著一批它自己的擁護者，平時只會對這類主題進行推文。
+
+綜合來看，在八卦版二月到三月這段期間，最熱門的主題無疑是在主題網路中位處中心並且有高潛水客比例的韓國瑜主題，其他較為次要的熱門主題包含華航罷工、刑事案件新聞以及兩岸議題。
+
+## Future application
+
+在結束一連串對於熱門主題的研究之後，我開始思考在這個過程中有沒有什麼環節在未來有更多發展或是應用的可能。我認為先前對於潛水客的分析能夠幫助未來預測單篇文章能夠引起多少使用者的迴響，此外，先前對於熱門主題的分析，可以將過程更加優化並且自動化，讓未來不同時期的八卦版文章都能夠輕鬆套用到這樣的模式中分析，並且生成數個能夠幫助進行決策的指標。
+
+### Prediction with lurking repliers
+
+之所以會想要透過潛水客來幫助文章推文數量的預測，是因為潛水客的推文行為本身就和一篇文章或者一個主題能否變成熱門話題有一定關聯，也就是一篇文章和一個主題必須在客觀上是一個足夠轟動或是重要的議題，才能夠吸引出潛水客的推文，也就是說只要一篇文章開始出個數個潛水客的推文，我們就可以推論出該篇文章和與其相關的文章或者主題能夠吸引到較多的使用者推文。
+
+因此首先必須要借用先前的分析，把潛水客的名單標記出來，然而並不是每一個主題的潛水客名單都有良好的預測推文數量的功能，例如我們就很難期待廢文的潛水客名單可以幫助我們預測（因為這類主題的潛水客的推文行為並和文章的熱門轟動與否無關，僅僅是這類主題有自己的一批擁護者），因此我只找出華航罷工和韓國瑜主題的潛水客名單，來測試預測推文數量的效果。
+
+為了比較這兩組名單的預測效果，我另外再從有夠推文紀錄的 id 名單中隨機抽樣出使用者，三組名單中各抽樣 500 人，藉此來比較隨機抽樣和標記出來的潛水客，哪一個在預測推文數量上的表現較佳。
+
+#### Loading test data
+
+```{r}
+load("dataset/apr_reply.rda")
+```
+
+#### Create sample users
+
+```{r}
+set.seed(1234)
+random_user <- allreply %>%
+  distinct(id) %>%
+  sample_n(500)
+
+set.seed(1234)
+uni_id_hua <- bipartite_matrix %>%
+  as.data.frame() %>%
+  mutate(id = rownames(bipartite_matrix)) %>%
+  mutate(sum = rowSums(.[1:22])) %>%
+  filter(sum <= 2) %>%
+  filter(華航罷工 == 1) %>%
+  select(id) %>%
+  sample_n(500)
+
+set.seed(1234)
+uni_id_han <- bipartite_matrix %>%
+  as.data.frame() %>%
+  mutate(id = rownames(bipartite_matrix)) %>%
+  mutate(sum = rowSums(.[1:22])) %>%
+  filter(sum <= 2) %>% 
+  filter(韓國瑜 == 1) %>%
+  select(id) %>%
+  sample_n(500)
+```
+
+#### Prediction plots
+
+```{r, message=FALSE, fig.align="center", warning=FALSE}
+random <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% random_user$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(random, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_x_continuous(limits = c(0, 20)) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("隨機抽樣推文者") +
+  ylab("推文數") +
+  ggtitle("隨機抽樣推文者 VS. 推文數") +
+  basic_theme()
+
+res_hua <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% uni_id_hua$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(res_hua, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_x_continuous(limits = c(0, 20)) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("華航罷工潛水客") +
+  ylab("推文數") +
+  ggtitle("華航罷工潛水客 VS. 推文數") +
+  basic_theme()
+
+res_han <- reply.df %>%
+  group_by(url) %>%
+  mutate(max = max(rowid)) %>%
+  distinct(url, max, V2) %>%
+  mutate(num = ifelse(V2 %in% uni_id_han$id, 1, 0)) %>%
+  group_by(url, max) %>%
+  summarise(n_user = sum(num)) %>%
+  arrange(n_user, desc(max))
+
+ggplot(res_han, aes(x = n_user, y = max)) +
+  geom_jitter(alpha = 0.5) +
+  scale_x_continuous(limits = c(0, 20)) +
+  scale_y_continuous(limits = c(0, 1600)) +
+  xlab("韓國瑜潛水客") +
+  ylab("推文數") +
+  ggtitle("韓國瑜潛水客 VS. 推文數") +
+  basic_theme()
+```
+
+根據以上三張散點圖，可以發現三組抽樣出來的名單之於推文數都有一定的預測能力，隨機抽樣組和華航罷工組呈現出來的樣態很類似，這兩組名單因為實際推文的人數變異過小，導致大部分的觀察值都過於集中在左下方。而韓國瑜主題的抽樣名單點分布過於集中的問題則沒有那麼嚴重，作為一個預測指標表現比前面兩者更佳。
+
+除了透過圖形的觀察外，針對這三個名單我個別建立非線性迴歸模型，透過數據來呈現究竟標記的潛水客名單是否比起隨機抽樣名單有更優的預測表現。
+
+```{r, results='hide'}
+summary(lm(max ~ poly(n_user, 4), random))
+summary(lm(max ~ poly(n_user, 4), res_hua))
+summary(lm(max ~ poly(n_user, 4), res_han))
+```
+
+| 分類 | Residual Standard Error | R-squared |
+|------------|------------|-----------------------|
+| 隨機抽樣名單 | 64.65 | 0.4526 |
+| 華航罷工潛水客名單 | 65.50 | 0.4380 |
+| 韓國瑜潛水客名單 | 59.21 | 0.5408 |
+
+透過以上表格可以發現，隨機抽樣名單和華航罷工潛水客名單在預測推文數量的表現上差異不大，而韓國瑜潛水客名單卻有相對較優的表現，對於推文數量的解釋力可以到達將近五成五，比前面兩者多了將近一成。
+
+透過特定主題潛水客的單一指標可以達到 55% 的預測力，且效果顯數優於隨機抽樣名單，代表這個方法的確有幫助預測文章熱門程度的潛力，只是關於什麼樣主題的潛水客名單才能有足夠好的效果，在應用上需要進一步衡量。
+
+### Making package ranking topic popularity automatically
+
+最後一個階段尚待開發，預計將來會產出一個 package 能夠自動對於任一時段的八卦版文章進行分析。該 package 能夠自動對文章進行主題分類，並且提供各個文章的關鍵詞，以及數個重要指標（主題網路中心性、潛水客比例等等），並給出一個綜合性的指標來排序不同主題的熱門程度。
