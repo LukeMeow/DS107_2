@@ -6,7 +6,7 @@
 > * Education: Bachelor of Sociology of National Taiwan University
 > * Programming Languages: R, Python, SQL
 > * Languages: Chinese, English, Japanese, Germany
-> * Email: [listen82231@gmail.com](listen82231@gmail.com)
+> * Email: [boruyangtw@gmail.com](boruyangtw@gmail.com)
 
 ### Programming-related experience
 
