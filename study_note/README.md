@@ -17,3 +17,11 @@
 > * [Git入門指南](https://backlog.com/git-tutorial/tw/)
 > * [醫學統計學](https://wangcc.me/LSHTMlearningnote/)
 > * [The caret Package](https://topepo.github.io/caret/index.html)
+> * [scikit-learn Machine Learning in Python](https://scikit-learn.org/stable/index.html)
+> * [斯坦福课程：自然语言理解(2019)](https://www.bilibili.com/video/av56067156/)
+> * [Python Machine Learning](https://machine-learning-course.readthedocs.io/en/latest/index.html)
+> * [Git & GitHub 教學手冊](https://w3c.hexschool.com/git/cfdbd310?fbclid=IwAR0zgG8gTLaByJLaC4CEOoXwEgCFB1lIFKZXXIqiGWYM6yec2A-DYuCTf6A)
+> * [Scrapy Tutorial Series: Web Scraping Using Python](https://www.accordbox.com/blog/scrapy-tutorial-series-web-scraping-using-python/)
+> * [Forecasting: Principles and Practice](https://otexts.com/fpp2/)
+> * [Introduction to Econometrics with R](https://www.econometrics-with-r.org/index.html)
+> *
