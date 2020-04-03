@@ -24,4 +24,4 @@
 > * [Scrapy Tutorial Series: Web Scraping Using Python](https://www.accordbox.com/blog/scrapy-tutorial-series-web-scraping-using-python/)
 > * [Forecasting: Principles and Practice](https://otexts.com/fpp2/)
 > * [Introduction to Econometrics with R](https://www.econometrics-with-r.org/index.html)
-> *
+> * [Applied Time Series Analysis](https://online.stat.psu.edu/stat510/)
