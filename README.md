@@ -11,6 +11,7 @@
 ### Programming-related experience
 
 > * Completion of 37 R-related courses, 32 Python-related courses, 5 SQL-related courses on [Datacamp](https://www.datacamp.com)
+> * Research about political contribution and discussion in social network
 
 ### [PTT Topic Popularity Research](https://boruyang.github.io/portfolio/topic_popularity_research/topic_popularity_research.html)
 
