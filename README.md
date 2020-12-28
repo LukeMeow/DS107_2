@@ -3,7 +3,7 @@
 ### Self-introduction
 
 > * Name: Boru Yang
-> * Education: Bachelor of Sociology of National Taiwan University, Master's Student Studying Statistics at NTU
+> * Education: Bachelor of Sociology of National Taiwan University, Master's Student Studying Statistics at National Taiwan University
 > * Programming Languages: R, Python, SQL
 > * Languages: Chinese, English, Japanese, German
 > * Email: [boruyangtw@gmail.com](boruyangtw@gmail.com)
