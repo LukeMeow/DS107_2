@@ -1,6 +1,6 @@
-## Portfolio of BoRu Yang
+## Boru Yang
 
-### Self-introduction
+### Profile
 
 > * Name: Boru Yang
 > * Education: Bachelor of Sociology of National Taiwan University, Master's Student Studying Statistics at National Taiwan University
